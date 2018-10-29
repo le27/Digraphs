@@ -1580,3 +1580,36 @@ function(gr)
   od;
   return fail;
 end);
+
+#
+
+InstallMethod(BiconnectedComponents,
+"for a digraph",
+[IsDigraph],
+function(D)
+local OldLabels, BiconnectedComps, Unfinished, component, GraphSubcomponents, i,j, CutVertices, CutGraph , GraphComponent;
+    BiconnectedComps := [];
+    OldLabels := DigraphVertexLabels(D);
+    SetDigraphVertexLabels(D,[1 ..DigraphNrVertices(D)]);
+    Unfinished := ShallowCopy(DigraphConnectedComponents(D).comps);
+    while not Unfinished = [] do
+        GraphComponent := InducedSubdigraph(D, Unfinished[Length(Unfinished)]);
+        Remove(Unfinished);
+        CutVertices := ArticulationPoints(GraphComponent);
+        if CutVertices = [] then
+            Append(BiconnectedComps,[DigraphVertexLabels(GraphComponent)]);
+        else
+            CutGraph := DigraphRemoveVertex(GraphComponent,CutVertices[1]);
+            GraphSubcomponents := ShallowCopy(DigraphConnectedComponents(CutGraph).comps);
+            for i in [1 .. Length(GraphSubcomponents)] do
+                GraphSubcomponents[i]:= Concatenation(DigraphVertexLabels(CutGraph){GraphSubcomponents[i]},[DigraphVertexLabel(GraphComponent,CutVertices[1])]);
+            od;
+            Append(Unfinished,GraphSubcomponents);
+        fi;
+    od;
+    SetDigraphVertexLabels(D,OldLabels);
+    for i in [1 ..Length(BiconnectedComps)] do
+          BiconnectedComps[i]:=SortedList(BiconnectedComps[i]);
+    od;
+    return SortedList(BiconnectedComps);
+end);

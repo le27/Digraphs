@@ -1319,6 +1319,60 @@ gap> gr := Digraph([[2, 2], [1, 1]]);;
 gap> IsMultiDigraph(gr) and IsHamiltonianDigraph(gr);
 true
 
+# IsPlanarDigraph
+gap> IsPlanarDigraph(Digraph([]));
+true
+gap> IsPlanarDigraph(Digraph([[]]));
+true
+gap> IsPlanarDigraph(Digraph([[],[]]));
+true
+gap> IsPlanarDigraph(Digraph([[1],[]]));
+true
+gap> IsPlanarDigraph(Digraph([[1,1,1,1,1,2,2,2,2,3,3,3,3,3,4,4,4,4,4,4],[1,1,1,1,1,2,2,2,2,3,3,3,3,3,4,4,4,4,4,4],[1,1,1,1,1,2,2,2,2,3,3,3,3,3,4,4,4,4,4,4],[1,1,1,1,1,2,2,2,2,3,3,3,3,3,4,4,4,4,4,4]]));
+true
+gap> IsPlanarDigraph(Digraph([[2],[3],[1,4],[5],[3]]));
+true
+gap> IsPlanarDigraph(CompleteBipartiteDigraph(2,10));
+true
+gap> IsPlanarDigraph(CompleteDigraph(4));
+true
+gap> IsPlanarDigraph(ChainDigraph(100));
+true
+gap> IsPlanarDigraph(CycleDigraph(100));
+true
+gap> IsPlanarDigraph(CompleteDigraph(5));
+false
+gap> IsPlanarDigraph(CompleteDigraph(6));
+false
+gap> IsPlanarDigraph(CompleteBipartiteDigraph(3,3));
+false
+gap> IsPlanarDigraph(Digraph([[2],[3],[1,3,4,5,6,7],[3,4,5,6,7],[3,4,5,6,7],[3,4,5,6,7],[3,4,5,6,7]]));
+false
+gap> IsPlanarDigraph(CompleteBipartiteDigraph(3,4));
+false
+gap> IsPlanarDigraph(CompleteDigraph(4));
+true
+gap> IsPlanarDigraph(ChainDigraph(100));
+true
+gap> IsPlanarDigraph(CycleDigraph(100));
+true
+gap> gr:=Digraph([
+> [ 20, 43 ], [  ], [  ], [ 2, 48, 50 ], [ 32 ], [ 3, 13, 34 ], [  ], [ 4 ], [  ], [ 22 ], [  ], [ 15, 21 ], [  ], [ 26 ], [ 47 ], [ 8 ],
+> [ 23, 33 ], [ 11, 14, 36 ], [ 11 ], [ 45, 47 ], [ 5 ], [ 33, 38 ], [ 44, 48 ], [ 41 ], [ 10 ], [ 18 ], [ 11 ], [ 27, 29, 37 ], [  ],
+> [  ], [ 50 ], [ 34 ], [ 12, 24 ], [ 17, 41 ], [ 3 ], [ 19, 42 ], [  ], [ 11, 15 ], [  ], [  ], [  ], [ 28 ], [ 23, 40 ], [ 19, 38, 46 ],
+> [ 7, 18 ], [ 12 ], [ 40, 49 ], [ 46 ], [ 33 ], [ 45 ] ]);
+<digraph with 50 vertices, 61 edges>
+gap> IsPlanarDigraph(gr);
+false
+gap> gr:=Digraph([
+> [ 20, 43 ], [  ], [  ], [ 2, 50 ], [ 32 ], [ 3, 13, 34 ], [  ], [ 4 ], [  ], [ 22 ], [  ], [ 15, 21 ], [  ], [ 26 ], [ 47 ], [ 8 ],
+> [ 23, 33 ], [ 11, 14, 36 ], [ 11 ], [ 45, 47 ], [ 5 ], [ 38 ], [ 44, 48 ], [ 41 ], [ 10 ], [ 18 ], [ 11 ], [ 27, 29, 37 ], [  ], [  ],
+> [ 50 ], [ 34 ], [ 12, 24 ], [ 17, 41 ], [ 3 ], [ 19, 42 ], [  ], [ 11, 15 ], [  ], [  ], [  ], [ 28 ], [ 23, 40 ], [ 19, 38, 46 ],
+> [ 7, 18 ], [ 12 ], [ 40, 49 ], [ 46 ], [ 33 ], [ 45 ] ]);
+<digraph with 50 vertices, 59 edges>
+gap> IsPlanarDigraph(gr);
+true
+
 # IsPreorderDigraph and IsQuasiorderDigraph
 gap> gr := Digraph([[1], [1, 2], [1, 3], [1, 4], [1 .. 5], [1 .. 6],
 > [1, 2, 3, 4, 5, 7], [1, 8]]);;

@@ -38,6 +38,7 @@ DeclareProperty("IsHamiltonianDigraph", IsDigraph);
 DeclareProperty("IsMeetSemilatticeDigraph", IsDigraph);
 DeclareProperty("IsJoinSemilatticeDigraph", IsDigraph);
 DeclareProperty("IsCycleDigraph", IsDigraph);
+DeclareProperty("IsPlanarDigraph", IsDigraph);
 
 DeclareOperation("DIGRAPHS_IsMeetJoinSemilatticeDigraph",
                  [IsHomogeneousList]);
