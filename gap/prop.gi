@@ -685,7 +685,6 @@ InstallMethod(IsPlanarDigraph, "for a digraph",
 [IsDigraph],
 function(gr)
   local a, AttachmentLists, BackEdges, Check, comp, Component, CurrentLabel, CurrentPath, CurrentVertex, D, e, FullDigraph, i, InputEdges, InterlacementGraph, InterlacementGraphComponent, j, k, L, NiceAttachments, Out, Output, Path, PreviousVertex, RecursionDepth, RootPaths, Spines, Stems, STree, Switch1, Switch2, VertexWithLabel, WantToReturnToMiddle, WantToReturnToStart, x, y;
-
   for Component in BiconnectedComponents(gr) do
     D := DigraphSymmetricClosure(DigraphRemoveAllMultipleEdges(DigraphRemoveLoops(InducedSubdigraph(gr,Component))));
     STree := DigraphCopy(UndirectedSpanningTree(D));
@@ -718,25 +717,24 @@ function(gr)
 
     BackEdges:= [];
     for i in Difference(DigraphEdges(D),DigraphEdges(STree)) do
-        if (DigraphVertexLabel(STree,i[1])-DigraphVertexLabel(STree,i[2]) > 1) then
-            Add(BackEdges,[DigraphVertexLabel(STree,i[1]),DigraphVertexLabel(STree,i[2])]);
+        if (DigraphVertexLabel(STree, i[1]) - DigraphVertexLabel(STree, i[2]) > 1) then
+            Add(BackEdges,[DigraphVertexLabel(STree,i[1]), DigraphVertexLabel(STree, i[2])]);
         fi;
     od;
 
     Out := [];
     for i in [1 .. DigraphNrVertices(D)] do
-        Add(Out,DigraphVertexLabels(STree){OutNeighboursOfVertex(STree,VertexWithLabel[i])});
+        Add(Out, DigraphVertexLabels(STree){OutNeighboursOfVertex(STree, VertexWithLabel[i])});
     od;
 
     WantToReturnToMiddle := false;
-    RecursionDepth := 2;
+    RecursionDepth := 1;
     Spines := [];
     Stems  := [];
     AttachmentLists := [];
     InputEdges := [[1, 2]];
     FullDigraph := DigraphAddEdges(Digraph(Out), BackEdges);
-    while RecursionDepth > 1 and not BackEdges = [] do
-        RecursionDepth := RecursionDepth - 1; #move if possible
+    while RecursionDepth > 0 and not BackEdges = [] do
         x := InputEdges[RecursionDepth][1];
         y := InputEdges[RecursionDepth][2];
         WantToReturnToStart := false;
@@ -747,27 +745,27 @@ function(gr)
                 for i in [1 .. DigraphNrVertices(FullDigraph)] do
                     j:= PositionProperty(BackEdges, e -> (e[2] = i) and (y in RootPaths[e[1]]));
                     if not j = fail then
-                            break;
-                    fi;#TODO DigraphInEdges?
+                        break;
+                    fi;
                 od;
                 e:= BackEdges[j];
                 Path := RootPaths[e[1]];
                 Spines[RecursionDepth] := Path{[Position(Path, y) .. Length(Path)]};
             else
-                e := [x,y];
+                e := [x, y];
                 Spines[RecursionDepth] := [];
             fi;
             Stems[RecursionDepth] := Concatenation(Reversed(RootPaths[e[2]]), RootPaths[x]);
             i := Length(Stems[RecursionDepth]);
-            j := Position(Stems[RecursionDepth],Stems[RecursionDepth][i]);
+            j := Position(Stems[RecursionDepth], Stems[RecursionDepth][i]);
             while j = i do
-              i := i - 1 ;
-              j := Position(Stems[RecursionDepth],Stems[RecursionDepth][i]);
+              i := i - 1;
+              j := Position(Stems[RecursionDepth], Stems[RecursionDepth][i]);
             od;
             Stems[RecursionDepth] := Stems[RecursionDepth]{Concatenation([1 .. j], [(i + 1) .. Length(Stems[RecursionDepth])])};
         fi;
         for i in Reversed(Spines[RecursionDepth]) do
-            for CurrentVertex in OutNeighboursOfVertex(FullDigraph,i) do
+            for CurrentVertex in OutNeighboursOfVertex(FullDigraph, i) do
                 if not (Spines[RecursionDepth][Length(Spines[RecursionDepth])] <> i and CurrentVertex in Spines[RecursionDepth]) then
                     #Recursion Point
                     if not WantToReturnToMiddle then
@@ -780,14 +778,14 @@ function(gr)
                         WantToReturnToMiddle := false;
                     fi;
                     if not WantToReturnToMiddle then
-                        Append(AttachmentLists[RecursionDepth],[Output]);
+                        Append(AttachmentLists[RecursionDepth], [Output]);
                         InterlacementGraph:= NullDigraph(Length(AttachmentLists[RecursionDepth]));
                         for j in [1 .. Length(AttachmentLists[RecursionDepth])] do
-                            for k in [1 .. (j-1)] do
+                            for k in [1 .. (j - 1)] do
                                 if Length(Intersection(AttachmentLists[RecursionDepth][k], AttachmentLists[RecursionDepth][j])) >= 3 then
                                     InterlacementGraph:=DigraphAddEdge(InterlacementGraph, [k, j]);
                                 fi;
-                                L :=  Set(Concatenation(AttachmentLists[RecursionDepth][j],AttachmentLists[RecursionDepth][k]));
+                                L :=  Set(Concatenation(AttachmentLists[RecursionDepth][j], AttachmentLists[RecursionDepth][k]));
                                 Switch1:=0;
                                 Switch2:=0;
                                 for a in L do
@@ -810,7 +808,7 @@ function(gr)
                                         fi;
                                     fi;
                                     if Switch1 > 3 or Switch2 > 3 then
-                                      InterlacementGraph := DigraphAddEdge(InterlacementGraph, [k, j]);
+                                       InterlacementGraph := DigraphAddEdge(InterlacementGraph, [k, j]);
                                        break;
                                     fi;
                                 od;
@@ -822,16 +820,18 @@ function(gr)
                     fi;
                 fi;
             od;
-            if WantToReturnToStart then break; fi;
+            if WantToReturnToStart then
+                break;
+            fi;
         od;
         if not WantToReturnToStart then
-              InterlacementGraph:= NullDigraph(Length(AttachmentLists[RecursionDepth]));
+              InterlacementGraph := NullDigraph(Length(AttachmentLists[RecursionDepth]));
               for j in [1 .. Length(AttachmentLists[RecursionDepth])] do
-                  for k in [1 .. (j-1)] do
+                  for k in [1 .. (j - 1)] do
                       if Length(Intersection(AttachmentLists[RecursionDepth][k], AttachmentLists[RecursionDepth][j])) >= 3 then
-                          InterlacementGraph := DigraphAddEdge(InterlacementGraph,[k,j]);
+                          InterlacementGraph := DigraphAddEdge(InterlacementGraph, [k, j]);
                       fi;
-                      L :=  Set(Concatenation(AttachmentLists[RecursionDepth][j],AttachmentLists[RecursionDepth][k]));
+                      L :=  Set(Concatenation(AttachmentLists[RecursionDepth][j], AttachmentLists[RecursionDepth][k]));
                       Switch1 := 0;
                       Switch2 := 0;
                       for a in L do
@@ -854,7 +854,7 @@ function(gr)
                               fi;
                           fi;
                           if Switch1 > 3 or Switch2 > 3 then
-                            InterlacementGraph := DigraphAddEdge(InterlacementGraph, [k, j]);
+                             InterlacementGraph := DigraphAddEdge(InterlacementGraph, [k, j]);
                              break;
                           fi;
                       od;
@@ -885,15 +885,16 @@ function(gr)
                   Append(NiceAttachments,[x]);
                   for e in BackEdges do
                       if (e[2] in Stems[RecursionDepth]) and (y in RootPaths[e[1]]) then
-                            Add(NiceAttachments,e[2]);
+                          Add(NiceAttachments,e[2]);
                       fi;
                   od;
               else
                   Append(NiceAttachments,[x,y]);
               fi;
-              Output := SortedList(DuplicateFreeList(NiceAttachments));
+              Output := Set(NiceAttachments);
               WantToReturnToMiddle := true;
         fi;
+        RecursionDepth := RecursionDepth - 1;
     od;
   od;
   return true;
