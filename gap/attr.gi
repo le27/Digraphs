@@ -1580,3 +1580,12 @@ function(gr)
   od;
   return fail;
 end);
+
+#
+
+InstallMethod(CharacteristicPolynomial,
+"for a digraph",
+[IsDigraph],
+function(gr)
+    return CharacteristicPolynomial(AdjacencyMatrix(gr));
+end);
