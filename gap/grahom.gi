@@ -724,7 +724,7 @@ function(domain, codomain, vertexmap, edgemap)
                               domedgesbyinvertex[domedges[currentpair[2]][2]]);
       newoptions := Filtered(newoptions,
                              x -> (x[1] ^ edgemap = x[2] ^ edgemap) and
-                                  (x[1] < x[2]) and (not x in goodedgepairs));
+                                  (x[1] <= x[2]) and (not x in goodedgepairs));
       if newoptions = [] then
         currentpath[Size(currentpath)] := currentpath[Size(currentpath)] + 1;
         while currentpath <> [] and currentpath[Size(currentpath)] >
@@ -759,10 +759,10 @@ function(domain, codomain, vertexmap, edgemap)
     while not optiontree = [] do
       currentpair := optiontree[Size(currentpath)]
                                [currentpath[Size(currentpath)]];
-      newoptions := Cartesian(domedgesbyoutvertex[domedges[currentpair[1]][2]],
-                             domedgesbyoutvertex[domedges[currentpair[2]][2]]);
+      newoptions := Cartesian(domedgesbyoutvertex[domedges[currentpair[1]][1]],
+                             domedgesbyoutvertex[domedges[currentpair[2]][1]]);
       newoptions := Filtered(newoptions, x -> (x[1] ^ edgemap = x[2] ^ edgemap)
-                             and (x[1] < x[2]) and (not x in goodedgepairs));
+                             and (x[1] <= x[2]) and (not x in goodedgepairs));
       if newoptions = [] then
         currentpath[Size(currentpath)] := currentpath[Size(currentpath)] + 1;
         while currentpath <> [] and currentpath[Size(currentpath)] >
@@ -782,7 +782,7 @@ function(domain, codomain, vertexmap, edgemap)
       edgepath := List([1 .. Size(currentpath)],
                        x -> optiontree[x][currentpath[x]]);
       if not Size(Set(edgepath)) = Size(edgepath) then
-        return false;
+        return [false, "inj", edgepath];
       fi;
     od;
   od;
@@ -822,7 +822,7 @@ function(domain, codomain, vertexmap, edgemap)
       newoptions := Filtered(newoptions, x -> not x in goodconfigurations);
       #finding an unwritable path 
       if ForAny(newoptions, x-> x[2] = []) then
-        return [false, "sur"];
+        return [false, "sur", currentpath, optiontree];
       fi;
 
       if newoptions = [] then
