@@ -2452,6 +2452,7 @@ gap> IsDigraphEmbedding(ran, src, (), [2, 1], [1, 2, 2]);
 false
 gap> IsDigraphEmbedding(ran, src, (), [2, 1], [1, 1, 2]);
 false
+<<<<<<< HEAD
 gap> IsDigraphFolding(Digraph([[1, 2], [1, 2]]), Digraph([[1, 1]]),
 > Transformation([1, 1]), Transformation([1, 2]));
 false
@@ -2504,6 +2505,8 @@ gap> IsDigraphFolding(Digraph([[1, 4], [1, 4], [2, 3], [2, 3]]),
 >  Digraph([[1, 2], [1, 2]]),                                             
 > Transformation([1, 1, 2, 2]), Transformation([1, 2, 1, 2, 3, 4, 3, 4]));
 true
+=======
+>>>>>>> 370f6d435f00619276cca1119a1dd261567546c6
 
 #  DIGRAPHS_UnbindVariables
 gap> Unbind(edges);

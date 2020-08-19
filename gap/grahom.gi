@@ -652,6 +652,7 @@ function(src, ran, x, cols1, cols2)
     and DigraphsRespectsColouring(src, ran, x, cols1, cols2);
 end);
 
+<<<<<<< HEAD
 InstallMethod(IsDigraphFolding, "for a digraph, a digraph, and a transformation",
 [IsDigraph, IsDigraph, IsTransformation, IsTransformation],
 function(domain, codomain, vertexmap, edgemap)
@@ -846,6 +847,8 @@ function(domain, codomain, vertexmap, edgemap)
   return true;
 end);
 
+=======
+>>>>>>> 370f6d435f00619276cca1119a1dd261567546c6
 InstallMethod(IsDigraphColouring, "for a digraph by out-neighbours and a list",
 [IsDigraphByOutNeighboursRep, IsHomogeneousList],
 function(D, colours)
