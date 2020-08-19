@@ -81,6 +81,19 @@ InstallMethod(DigraphAddVertices, "for an immutable digraph and an integer",
 [IsImmutableDigraph, IsInt],
 {D, m} -> MakeImmutable(DigraphAddVertices(DigraphMutableCopy(D), m)));
 
+# Included for backwards compatibility, even though the 2nd arg is redundant.
+# See https://github.com/gap-packages/Digraphs/issues/264
+# This is deliberately kept undocumented.
+InstallMethod(DigraphAddVertices, "for a digraph, an integer, and a list",
+[IsDigraph, IsInt, IsList],
+function(D, m, labels)
+  if m <> Length(labels) then
+    ErrorNoReturn("the list <labels> (3rd argument) must have length <m> ",
+                  "(2nd argument),");
+  fi;
+  return DigraphAddVertices(D, labels);
+end);
+
 InstallMethod(DigraphRemoveVertex,
 "for a mutable digraph by out-neighbours and positive integer",
 [IsMutableDigraph and IsDigraphByOutNeighboursRep, IsPosInt],
@@ -387,7 +400,7 @@ end);
 
 InstallGlobalFunction(DigraphDisjointUnion,
 function(arg)
-  local D, offset, n, i;
+  local D, offset, n, i, j;
 
   # Allow the possibility of supplying arguments in a list.
   if Length(arg) = 1 and IsList(arg[1]) then
@@ -397,7 +410,7 @@ function(arg)
   if not IsList(arg) or IsEmpty(arg)
       or not ForAll(arg, IsDigraphByOutNeighboursRep) then
     ErrorNoReturn("the arguments must be digraphs by out-neighbours, or a ",
-                  "single list of digraphs by out-neighbours,");
+                  "single non-empty list of digraphs by out-neighbours,");
   fi;
 
   D := arg[1];
@@ -405,7 +418,9 @@ function(arg)
   offset := DigraphNrVertices(D);
   for i in [2 .. Length(arg)] do
     n := Length(arg[i]);
-    arg[1]{[offset + 1 .. offset + n]} := arg[i] + offset;
+    for j in [1 .. n] do
+      arg[1][offset + j] := ShallowCopy(arg[i][j]) + offset;
+    od;
     offset := offset + n;
   od;
 
@@ -495,6 +510,97 @@ function(arg)
     return D;
   fi;
   return ConvertToImmutableDigraphNC(arg[1]);
+end);
+
+InstallGlobalFunction(DigraphCartesianProduct,
+function(arg)
+  local D, n, i, j, proj, m, labs;
+
+  # Allow the possibility of supplying arguments in a list.
+  if Length(arg) = 1 and IsList(arg[1]) then
+    arg := arg[1];
+  fi;
+
+  if not IsList(arg) or IsEmpty(arg)
+      or not ForAll(arg, IsDigraphByOutNeighboursRep) then
+    ErrorNoReturn("the arguments must be digraphs by out-neighbours, or a ",
+                  "single list of digraphs by out-neighbours,");
+  fi;
+
+  labs := List(Cartesian(Reversed(List(arg, DigraphVertexLabels))), Reversed);
+
+  D := arg[1];
+  DIGRAPHS_CombinationOperProcessArgs(arg);
+
+  m := Product(List(arg, Length));
+  proj := [Transformation([1 .. m], x -> RemInt(x - 1, Length(arg[1])) + 1)];
+  for i in [2 .. Length(arg)] do
+    n := Length(arg[1]);
+    Add(proj, Transformation([1 .. m],
+              x -> RemInt(QuoInt(x - 1, n), Length(arg[i])) * n + 1));
+    for j in [2 .. Length(arg[i])] do
+      arg[1]{[1 + n * (j - 1) .. n * j]} := List([1 .. n],
+        x -> Concatenation(arg[1][x] + n * (j - 1),
+                            x + n * (arg[i][j] - 1)));
+    od;
+    for j in [1 .. n] do
+      Append(arg[1][j], j + n * (arg[i][1] - 1));
+    od;
+  od;
+
+  if IsMutableDigraph(D) then
+    ClearDigraphEdgeLabels(D);
+  else
+    D := DigraphNC(arg[1]);
+  fi;
+  SetDigraphCartesianProductProjections(D, proj);
+  SetDigraphVertexLabels(D, labs);
+  return D;
+end);
+
+InstallGlobalFunction(DigraphDirectProduct,
+function(arg)
+  local D, n, i, j, proj, m, labs;
+
+  # Allow the possibility of supplying arguments in a list.
+  if Length(arg) = 1 and IsList(arg[1]) then
+    arg := arg[1];
+  fi;
+
+  if not IsList(arg) or IsEmpty(arg)
+      or not ForAll(arg, IsDigraphByOutNeighboursRep) then
+    ErrorNoReturn("the arguments must be digraphs by out-neighbours, or a ",
+                  "single list of digraphs by out-neighbours,");
+  fi;
+
+  labs := List(Cartesian(Reversed(List(arg, DigraphVertexLabels))), Reversed);
+
+  D := arg[1];
+  DIGRAPHS_CombinationOperProcessArgs(arg);
+
+  m := Product(List(arg, Length));
+  proj := [Transformation([1 .. m], x -> RemInt(x - 1, Length(arg[1])) + 1)];
+  for i in [2 .. Length(arg)] do
+    n := Length(arg[1]);
+    Add(proj, Transformation([1 .. m],
+              x -> RemInt(QuoInt(x - 1, n), Length(arg[i])) * n + 1));
+    for j in [2 .. Length(arg[i])] do
+      arg[1]{[1 + n * (j - 1) .. n * j]} := List([1 .. n],
+        x -> List(Cartesian(arg[1][x], n * (arg[i][j] - 1)), Sum));
+    od;
+    for j in [1 .. n] do
+      arg[1][j] := List(Cartesian(arg[1][j], n * (arg[i][1] - 1)), Sum);
+    od;
+  od;
+
+  if IsMutableDigraph(D) then
+    ClearDigraphEdgeLabels(D);
+  else
+    D := DigraphNC(arg[1]);
+  fi;
+  SetDigraphDirectProductProjections(D, proj);
+  SetDigraphVertexLabels(D, labs);
+  return D;
 end);
 
 ###############################################################################
@@ -1002,6 +1108,13 @@ function(D, edges)
   return SizeBlist(seen) = DigraphNrVertices(D);
 end);
 
+InstallMethod(IsMaximumMatching, "for a digraph and a list",
+[IsDigraph, IsHomogeneousList],
+function(D, edges)
+  return IsMatching(D, edges)
+          and Length(edges) = Length(DigraphMaximumMatching(D));
+end);
+
 InstallMethod(IsMaximalMatching, "for a digraph and a list",
 [IsDigraphByOutNeighboursRep, IsHomogeneousList],
 function(D, edges)
@@ -1200,6 +1313,57 @@ function(D, u, v)
     od;
     return fail;
 end);
+
+BindGlobal("DIGRAPHS_DijkstraST",
+function(digraph, source, target)
+  local dist, prev, queue, u, v, alt;
+
+  if not source in DigraphVertices(digraph) then
+    ErrorNoReturn("the 2nd argument <source> must be a vertex of the ",
+                  "1st argument <digraph>");
+  elif target <> fail and not target in DigraphVertices(digraph) then
+    ErrorNoReturn("the 3rd argument <target> must be a vertex of the ",
+                  "1st argument <digraph>");
+  fi;
+
+  dist := [];
+  prev := [];
+  queue := BinaryHeap({x, y} -> x[1] < y[1]);
+
+  for v in DigraphVertices(digraph) do
+    dist[v] := infinity;
+    prev[v] := -1;
+  od;
+
+  dist[source] := 0;
+  Push(queue, [0, source]);
+
+  while not IsEmpty(queue) do
+    u := Pop(queue);
+    u := u[2];
+    # TODO: this has a small performance impact for DigraphDijkstraS,
+    #       but do we care?
+    if u = target then
+      return [dist, prev];
+    fi;
+    for v in OutNeighbours(digraph)[u] do
+      alt := dist[u] + DigraphEdgeLabel(digraph, u, v);
+      if alt < dist[v] then
+        dist[v] := alt;
+        prev[v] := u;
+        Push(queue, [dist[v], v]);
+      fi;
+    od;
+  od;
+  return [dist, prev];
+end);
+
+InstallMethod(DigraphDijkstra, "for a digraph, a vertex, and a vertex",
+[IsDigraph, IsPosInt, IsPosInt], DIGRAPHS_DijkstraST);
+
+InstallMethod(DigraphDijkstra, "for a digraph, and a vertex",
+[IsDigraph, IsPosInt],
+{digraph, source} -> DIGRAPHS_DijkstraST(digraph, source, fail));
 
 InstallMethod(IteratorOfPaths,
 "for a digraph by out-neighbours and two pos ints",

@@ -157,19 +157,67 @@ gap> ReadDigraphs(file, 9);
 </ManSection>
 <#/GAPDoc>
 
+<#GAPDoc Label="String">
+<ManSection>
+  <Attr Name="String" Arg="digraph"/>
+  <Oper Name="PrintString" Arg="digraph"/>
+  <Returns>A string.</Returns>
+  <Description>
+    Returns a string <C>string</C> such that <C>EvalString(string)</C>
+    is equal to <A>digraph</A>, and has the same mutability.
+    See <Ref Func="EvalString" BookName="ref" />.
+    <P/>
+
+    The methods installed for <C>String</C> make some attempts to
+    ensure that <C>string</C> has as short a length as possible, but
+    there may exist shorter strings that also evaluate to <A>digraph</A>.
+    <P/>
+
+    It is possible that <C>string</C> may contain escaped special
+    characters. To obtain a representation of <A>digraph</A> that
+    can be entered as GAP input, please use
+    <Ref Func="Print" BookName="ref" />.
+    Note that <C>Print</C> for a digraph  delegates to
+    <C>PrintString</C>, which delegates to <C>String</C>.
+    <Log><![CDATA[
+gap> D := CycleDigraph(3);
+<immutable cycle digraph with 3 vertices>
+gap> Print(D);
+CycleDigraph(3);
+gap> G := PetersenGraph(IsMutableDigraph);
+<mutable digraph with 10 vertices, 30 edges>
+gap> String(G);
+"DigraphFromGraph6String(IsMutableDigraph, \"IheA@GUAo\");"
+gap> Print(last);
+DigraphFromGraph6String(IsMutableDigraph, "IheA@GUAo");
+gap> DigraphFromGraph6String(IsMutableDigraph, "IheA@GUAo");
+<mutable digraph with 10 vertices, 30 edges>
+]]></Log>
+  </Description>
+</ManSection>
+<#/GAPDoc>
+
 <#GAPDoc Label="DigraphFromGraph6String">
 <ManSection>
-  <Oper Name="DigraphFromGraph6String" Arg="str"/>
-  <Oper Name="DigraphFromDigraph6String" Arg="str"/>
-  <Oper Name="DigraphFromSparse6String" Arg="str"/>
-  <Oper Name="DigraphFromDiSparse6String" Arg="str"/>
+  <Oper Name="DigraphFromGraph6String"    Arg="[filt, ]str"/>
+  <Oper Name="DigraphFromDigraph6String"  Arg="[filt, ]str"/>
+  <Oper Name="DigraphFromSparse6String"   Arg="[filt, ]str"/>
+  <Oper Name="DigraphFromDiSparse6String" Arg="[filt, ]str"/>
   <Returns>A digraph.</Returns>
   <Description>
     If <A>str</A> is a string encoding a graph in Graph6, Digraph6, Sparse6 or
     DiSparse6 format, then the corresponding function returns a digraph. In the
     case of either Graph6 or Sparse6, formats which do not support directed
     edges, this will be a digraph such that for every edge, the edge going in
-    the opposite direction is also present.
+    the opposite direction is also present.<P/>
+
+    Each of these functions takes an optional first argument <A>filt</A>,
+    which should be either <Ref Filt="IsMutableDigraph"/>
+    or <Ref Filt="IsImmutableDigraph"/>,
+    and which specifies whether the output digraph shall
+    be mutable or immutable.
+    If no first argument is provided, then an immutable
+    digraph is returned by default.
     <Example><![CDATA[
 gap> DigraphFromGraph6String("?");
 <immutable empty digraph with 0 vertices>
@@ -179,6 +227,8 @@ gap> DigraphFromGraph6String("H?AAEM{");
 <immutable digraph with 9 vertices, 22 edges>
 gap> DigraphFromDigraph6String("&?");
 <immutable empty digraph with 0 vertices>
+gap> DigraphFromDigraph6String(IsMutableDigraph, "&DOOOW?");
+<mutable digraph with 5 vertices, 5 edges>
 gap> DigraphFromDigraph6String("&CQFG");
 <immutable digraph with 4 vertices, 6 edges>
 gap> DigraphFromDigraph6String("&IM[SrKLc~lhesbU[F_");
@@ -483,7 +533,14 @@ gap> dec(last);
     starting at 0.<P/>
 
     Note that the number of vertices of a digraph is not stored, and so vertices
-    which are not connected to any edge may be lost.
+    which are not connected to any edge may be lost.<P/>
+
+    
+    The operation <C>DigraphFromPlainTextString</C>
+    takes an optional first argument <Ref Filt="IsMutableDigraph"/>
+    or <Ref Filt="IsImmutableDigraph"/>, which specifies whether the output digraph shall
+    be mutable or immutable. If no first argument is provided, then an immutable
+    digraph is returned by default.
 
     <Example><![CDATA[
 gap> gr := Digraph([[2, 3], [1], [1]]);

@@ -9,9 +9,9 @@ extern "C" {
 /*
   Copyright (c) 2003-2015 Tommi Junttila
   Released under the GNU Lesser General Public License version 3.
-  
+
   This file is part of bliss.
-  
+
   bliss is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published by
   the Free Software Foundation, version 3 of the License.
@@ -58,6 +58,23 @@ void bliss_digraphs_write_dimacs(BlissGraph *graph, FILE *fp)
   assert(graph->g);
   graph->g->write_dimacs(fp);
 }
+
+extern "C"
+void bliss_digraphs_clear(BlissGraph *graph)
+{
+  assert(graph);
+  assert(graph->g);
+  graph->g->clear();
+}
+
+  extern "C"
+void bliss_digraphs_change_color(BlissGraph* graph, const unsigned int vertex, const unsigned int color)
+{
+  assert(graph);
+  assert(graph->g);
+  graph->g->change_color(vertex, color);
+}
+
 
 extern "C"
 void bliss_digraphs_release(BlissGraph *graph)
@@ -130,6 +147,20 @@ BlissGraph *bliss_digraphs_permute(BlissGraph *graph, const unsigned int *perm)
   return permuted_graph;
 }
 
+void fill_size(BlissStats* stats, const bliss_digraphs::Stats& s)
+{
+#ifdef BLISS_IN_GAP
+   std::vector<int> sizes = s.get_group_size().get_mults();
+   stats->group_size = (int*)malloc(sizes.size() * sizeof(int));
+   stats->group_size_len = sizes.size();
+   for(int i = 0; i < sizes.size(); ++i) {
+       stats->group_size[i] = sizes[i];
+   }
+#endif
+}
+
+
+
 extern "C"
 void
 bliss_digraphs_find_automorphisms(BlissGraph *graph,
@@ -153,6 +184,7 @@ bliss_digraphs_find_automorphisms(BlissGraph *graph,
       stats->nof_canupdates = s.get_nof_canupdates();
       stats->nof_generators = s.get_nof_generators();
       stats->max_level = s.get_max_level();
+      fill_size(stats, s);
     }
 }
 
@@ -170,8 +202,8 @@ bliss_digraphs_find_canonical_labeling(BlissGraph *graph,
   const unsigned int *canonical_labeling = 0;
   assert(graph);
   assert(graph->g);
-  
-  canonical_labeling = graph->g->canonical_form(s, hook, hook_user_param);
+
+  canonical_labeling = &(*graph->g->canonical_form(s, hook, hook_user_param));
 
   if(stats)
     {
@@ -182,7 +214,18 @@ bliss_digraphs_find_canonical_labeling(BlissGraph *graph,
       stats->nof_canupdates = s.get_nof_canupdates();
       stats->nof_generators = s.get_nof_generators();
       stats->max_level = s.get_max_level();
+      fill_size(stats, s);
+
     }
 
   return canonical_labeling;
+}
+
+
+extern "C"
+void bliss_digraphs_free_blissstats(BlissStats *stats)
+{
+#ifdef BLISS_IN_GAP
+    free(stats->group_size);
+#endif
 }

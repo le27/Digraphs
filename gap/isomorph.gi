@@ -48,7 +48,7 @@ function()
          "Using NautyTracesInterface by default for AutomorphismGroup");
     Info(InfoWarning,
          1,
-         "bliss will for used for edge coloured automorphisms");
+         "bliss will be used for edge coloured automorphisms");
   else
     Info(InfoWarning,
          1,
@@ -77,6 +77,9 @@ function(digraph, vert_colours, edge_colours)
       data[1] := [()];
     fi;
     data[1] := Group(data[1]);
+    if IsBound(data[3]) then
+        SetSize(data[1], data[3]);
+    fi;
 
     if Length(mults) > 0 then
       edge_gp := Group(Flat(List(mults,
@@ -95,6 +98,9 @@ function(digraph, vert_colours, edge_colours)
       data[1] := [()];
     fi;
     data[1] := Group(data[1]);
+    if IsBound(data[3]) then
+        SetSize(data[1], data[3]);
+    fi;
     return data;
   fi;
 end);
@@ -206,7 +212,8 @@ end);
 
 # Canonical digraphs
 
-InstallMethod(BlissCanonicalDigraph, "for a digraph", [IsDigraph],
+InstallMethodThatReturnsDigraph(BlissCanonicalDigraph, "for a digraph",
+[IsDigraph],
 function(D)
   if IsMultiDigraph(D) then
     return OnMultiDigraphs(D, BlissCanonicalLabelling(D));
@@ -223,7 +230,8 @@ function(D, colors)
   return OnDigraphs(D, BlissCanonicalLabelling(D, colors));
 end);
 
-InstallMethod(NautyCanonicalDigraph, "for a digraph", [IsDigraph],
+InstallMethodThatReturnsDigraph(NautyCanonicalDigraph, "for a digraph",
+[IsDigraph],
 function(D)
   if not DIGRAPHS_NautyAvailable or IsMultiDigraph(D) then
     Info(InfoWarning, 1, "NautyTracesInterface is not available");
@@ -716,9 +724,22 @@ function(src, ran, x)
      and IsDigraphHomomorphism(ran, src, x ^ -1);
 end);
 
+InstallMethod(IsDigraphIsomorphism,
+"for digraph, digraph, permutation, list, and list",
+[IsDigraph, IsDigraph, IsPerm, IsList, IsList],
+function(src, ran, x, cols1, cols2)
+  return IsDigraphIsomorphism(src, ran, x)
+    and DigraphsRespectsColouring(src, ran, x, cols1, cols2);
+end);
+
 InstallMethod(IsDigraphAutomorphism, "for a digraph and a permutation",
 [IsDigraph, IsPerm],
 {D, x} -> IsDigraphIsomorphism(D, D, x));
+
+InstallMethod(IsDigraphAutomorphism,
+"for a digraph, a permutation, and a list",
+[IsDigraph, IsPerm, IsList],
+{D, x, c} -> IsDigraphIsomorphism(D, D, x, c, c));
 
 InstallMethod(IsDigraphIsomorphism, "for digraph, digraph, and transformation",
 [IsDigraph, IsDigraph, IsTransformation],
@@ -731,6 +752,19 @@ function(src, ran, x)
   return IsDigraphIsomorphism(src, ran, y);
 end);
 
+InstallMethod(IsDigraphIsomorphism,
+"for digraph, digraph, transformation, list, and list",
+[IsDigraph, IsDigraph, IsTransformation, IsList, IsList],
+function(src, ran, x, cols1, cols2)
+  return IsDigraphIsomorphism(src, ran, x)
+    and DigraphsRespectsColouring(src, ran, x, cols1, cols2);
+end);
+
 InstallMethod(IsDigraphAutomorphism, "for a digraph and a transformation",
 [IsDigraph, IsTransformation],
 {D, x} -> IsDigraphIsomorphism(D, D, x));
+
+InstallMethod(IsDigraphAutomorphism,
+"for a digraph, a transformation, and a list",
+[IsDigraph, IsTransformation, IsList],
+{D, x, c} -> IsDigraphIsomorphism(D, D, x, c, c));

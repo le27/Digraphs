@@ -4,9 +4,9 @@
 /*
   Copyright (c) 2003-2015 Tommi Junttila
   Released under the GNU Lesser General Public License version 3.
-  
+
   This file is part of bliss.
-  
+
   bliss is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published by
   the Free Software Foundation, version 3 of the License.
@@ -39,7 +39,47 @@ namespace bliss_digraphs {
  * approximate big integers.
  */
 
-#if defined(BLISS_USE_GMP)
+/// Addition by Chris Jefferson, 16 Jan 2020, for use in GAP.
+/// Store the size of the group as a list of integers, to be
+/// multiplied together later.
+#define BLISS_IN_GAP
+
+#ifdef BLISS_IN_GAP
+class BigNum
+{
+  std::vector<int> v;
+public:
+  /**
+   * Create a new big number and set it to zero.
+   */
+  BigNum() { }
+
+  /**
+   * Destroy the number.
+   */
+  ~BigNum() { }
+
+  /**
+   * Set the number to \a n.
+   */
+  void assign(const int n) { v.clear(); v.push_back(n); }
+
+  /**
+   * Multiply the number with \a n.
+   */
+  void multiply(const int n) { v.push_back(n); }
+
+  /**
+   * Print the number in the file stream \a fp.
+   */
+  size_t print(FILE* const fp) const {return fprintf(fp, "<big number>"); }
+
+  std::vector<int> get_mults() const {
+      return v;
+  }
+};
+
+#elif defined(BLISS_USE_GMP)
 
 class BigNum
 {

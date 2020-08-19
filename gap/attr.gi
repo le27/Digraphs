@@ -14,88 +14,165 @@ InstallMethod(DigraphNrVertices, "for a digraph by out-neighbours",
 InstallMethod(OutNeighbours, "for a digraph by out-neighbours",
 [IsDigraphByOutNeighboursRep], DIGRAPH_OUT_NEIGHBOURS);
 
-# The next method is (yet another) DFS as described in
-# http://www.eecs.wsu.edu/~holder/courses/CptS223/spr08/slides/graphapps.pdf
+# The next method is (yet another) DFS which simultaneously computes:
+# 1. *articulation points* as described in
+#   http://www.eecs.wsu.edu/~holder/courses/CptS223/spr08/slides/graphapps.pdf
+# 2. *bridges* as described in https://stackoverflow.com/q/28917290/
+#   (this is a minor adaption of the algorithm described in point 1).
+# 3. a *strong orientation* as alluded to somewhere on the internet that I can
+#    no longer find. It's essentially just "orient every edge in the DFS tree
+#    away from the root, and every other edge (back edges) from the node with
+#    higher `pre` value to the one with lower `pre` value (i.e. they point
+#    backwards from later nodes in the DFS to earlier ones). If the graph is
+#    bridgeless, then it is guaranteed that the orientation of the last
+#    sentence is strongly connected."
 
-InstallMethod(ArticulationPoints, "for a digraph by out-neighbours",
-[IsDigraphByOutNeighboursRep],
+BindGlobal("DIGRAPHS_ArticulationPointsBridgesStrongOrientation",
 function(D)
-  local copy, nbs, counter, visited, num, low, parent, points, points_seen,
-        stack, depth, v, w, i;
-  if (HasIsConnectedDigraph(D) and not IsConnectedDigraph(D))
-      or DigraphNrVertices(D) <= 1 then
-    return [];
+  local N, copy, articulation_points, bridges, orientation, nbs, counter, pre,
+        low, nr_children, stack, u, v, i, w, connected;
+
+  N := DigraphNrVertices(D);
+
+  if HasIsConnectedDigraph(D) and not IsConnectedDigraph(D) then
+    # not connected, no articulation points, no bridges, no strong orientation
+    return [false, [], [], fail];
+  elif N < 2 then
+    # connected, no articulation points (removing 0 or 1 nodes does not make
+    # the graph disconnected), no bridges, strong orientation (since
+    # the digraph with 0 nodes is strongly connected).
+    return [true, [], [], D];
   elif not IsSymmetricDigraph(D) then
     copy := DigraphSymmetricClosure(DigraphMutableCopyIfMutable(D));
+    MakeImmutable(copy);
   else
     copy := D;
   fi;
+
+  # outputs
+  articulation_points := [];
+  bridges             := [];
+  orientation         := List([1 .. N], x -> BlistList([1 .. N], []));
+
+  # Get out-neighbours once, to avoid repeated copying for mutable digraphs.
   nbs := OutNeighbours(copy);
 
-  counter     := 0;
-  visited     := BlistList([1 .. DigraphNrVertices(copy)], []);
-  num         := [];
-  low         := [];
-  parent      := [1];
-  points      := [];
-  points_seen := BlistList([1 .. DigraphNrVertices(copy)], []);
-  stack       := [[1, 0]];
-  depth       := 1;
+  # number of nodes encountered in the search so far
+  counter := 0;
 
-  while depth > 1 or not visited[1] do
-    v := stack[depth][1];
-    if visited[v] then
-      depth := depth - 1;
-      v     := stack[depth][1];
-      w     := nbs[v][stack[depth][2]];
-      if v <> 1 and low[w] >= num[v] and not points_seen[v] then
-        points_seen[v] := true;
-        Add(points, v);
+  # the order in which the nodes are visited, -1 indicates "not yet visited".
+  pre := ListWithIdenticalEntries(N, -1);
+
+  # low[i] is the lowest value in pre currently reachable from node i.
+  low := [];
+
+  # nr_children of node 1, for articulation points the root node (1) is an
+  # articulation point if and only if it has at least 2 children.
+  nr_children := 0;
+
+  stack := Stack();
+  u := 1;
+  v := 1;
+  i := 0;
+
+  repeat
+    if pre[v] <> -1 then
+      # backtracking
+      i := Pop(stack);
+      v := Pop(stack);
+      u := Pop(stack);
+      w := nbs[v][i];
+
+      if v <> 1 and low[w] >= pre[v] then
+        Add(articulation_points, v);
+      fi;
+      if low[w] = pre[w] then
+        Add(bridges, [v, w]);
       fi;
       if low[w] < low[v] then
         low[v] := low[w];
       fi;
     else
-      visited[v] := true;
-      counter    := counter + 1;
-      num[v]     := counter;
-      low[v]     := counter;
+      # diving - part 1
+      counter := counter + 1;
+      pre[v]  := counter;
+      low[v]  := counter;
     fi;
-    i := PositionProperty(nbs[v], w -> w <> v, stack[depth][2]);
+    i := PositionProperty(nbs[v], w -> w <> v, i);
     while i <> fail do
       w := nbs[v][i];
-      if not visited[w] then
-        parent[w]       := v;
-        stack[depth][2] := i;
-        depth           := depth + 1;
-        if not IsBound(stack[depth]) then
-          stack[depth] := [];
+      if pre[w] <> -1 then
+        # v -> w is a back edge
+        if w <> u and pre[w] < low[v] then
+          low[v] := pre[w];
         fi;
-        stack[depth][1] := w;
-        stack[depth][2] := 0;
+        orientation[v][w] := not orientation[w][v];
+        i := PositionProperty(nbs[v], w -> w <> v, i);
+      else
+        # diving - part 2
+        if v = 1 then
+          nr_children := nr_children + 1;
+        fi;
+        orientation[v][w] := true;
+        Push(stack, u);
+        Push(stack, v);
+        Push(stack, i);
+        u := v;
+        v := w;
+        i := 0;
         break;
-      elif parent[v] <> w and num[w] < low[v] then
-        low[v] := num[w];
       fi;
-      i := PositionProperty(nbs[v], w -> w <> v, i);
     od;
-  od;
+  until Size(stack) = 0;
 
   if counter = DigraphNrVertices(D) then
-    i := Position(parent, 1, 1);
-    if i <> fail and Position(parent, 1, i) <> fail then
-      Add(points, 1);
+    connected := true;
+    if nr_children > 1 then
+      Add(articulation_points, 1);
     fi;
-    if IsImmutableDigraph(D) then
-      SetIsConnectedDigraph(D, true);
+    if not IsEmpty(bridges) then
+      orientation := fail;
+    else
+      orientation := DigraphByAdjacencyMatrix(DigraphMutabilityFilter(D),
+                                              orientation);
     fi;
-    return points;
   else
-    if IsImmutableDigraph(D) then
-      SetIsConnectedDigraph(D, false);
-    fi;
-    return [];
+    connected           := false;
+    articulation_points := [];
+    bridges             := [];
+    orientation         := fail;
   fi;
+  if IsImmutableDigraph(D) then
+    SetIsConnectedDigraph(D, connected);
+    SetArticulationPoints(D, articulation_points);
+    SetBridges(D, bridges);
+    if IsSymmetricDigraph(D) then
+      SetStrongOrientationAttr(D, orientation);
+    fi;
+  fi;
+  return [connected, articulation_points, bridges, orientation];
+end);
+
+InstallMethod(ArticulationPoints, "for a digraph by out-neighbours",
+[IsDigraphByOutNeighboursRep],
+function(D)
+  return DIGRAPHS_ArticulationPointsBridgesStrongOrientation(D)[2];
+end);
+
+InstallMethod(Bridges, "for a digraph by out-neighbours",
+[IsDigraphByOutNeighboursRep],
+function(D)
+  return DIGRAPHS_ArticulationPointsBridgesStrongOrientation(D)[3];
+end);
+
+InstallMethodThatReturnsDigraph(StrongOrientation,
+"for a digraph by out-neighbours",
+[IsDigraphByOutNeighboursRep],
+function(D)
+  if not IsSymmetricDigraph(D) then
+    ErrorNoReturn("not yet implemented");
+  fi;
+  return DIGRAPHS_ArticulationPointsBridgesStrongOrientation(D)[4];
 end);
 
 InstallMethod(ChromaticNumber, "for a digraph by out-neighbours",
@@ -267,6 +344,38 @@ function(D)
     SetIsEmptyDigraph(D, m = 0);
   fi;
   return m;
+end);
+
+InstallMethod(DigraphNrLoops,
+"for a digraph by out-neighbours",
+[IsDigraphByOutNeighboursRep],
+function(D)
+  local i, j, sum;
+    sum := 0;
+  if HasDigraphHasLoops(D) and not DigraphHasLoops(D) then
+    return 0;
+  else
+    for i in DigraphVertices(D) do
+      for j in OutNeighbours(D)[i] do
+        if i = j then
+          sum := sum + 1;
+        fi;
+      od;
+    od;
+  fi;
+  if IsImmutableDigraph(D) then
+    SetDigraphHasLoops(D, sum <> 0);
+  fi;
+  return sum;
+end);
+
+InstallMethod(DigraphNrLoops,
+"for a digraph that knows its adjacency matrix",
+[IsDigraphByOutNeighboursRep and HasAdjacencyMatrix],
+function(D)
+  local A, i;
+  A := AdjacencyMatrix(D);
+  return Sum(DigraphVertices(D), i -> A[i][i]);
 end);
 
 InstallMethod(DigraphEdges, "for a digraph by out-neighbours",
@@ -1356,6 +1465,7 @@ end);
 
 # Things that are attributes for immutable digraphs, but operations for mutable.
 
+# Don't use InstallMethodThatReturnsDigraph since we can do better in this case.
 InstallMethod(DigraphReverse, "for a digraph by out-neighbours",
 [IsDigraphByOutNeighboursRep],
 function(D)
@@ -1376,13 +1486,7 @@ function(D)
   return D;
 end);
 
-InstallMethod(DigraphReverse, "for a digraph with known digraph reverse",
-[IsDigraph and HasDigraphReverseAttr], SUM_FLAGS, DigraphReverseAttr);
-
-InstallMethod(DigraphReverseAttr, "for an immutable digraph",
-[IsImmutableDigraph], DigraphReverse);
-
-InstallMethod(DigraphDual, "for a digraph by out-neighbours",
+InstallMethodThatReturnsDigraph(DigraphDual, "for a digraph by out-neighbours",
 [IsDigraphByOutNeighboursRep],
 function(D)
   local nodes, C, list, i;
@@ -1409,13 +1513,8 @@ function(D)
   return C;
 end);
 
-InstallMethod(DigraphDual, "for a digraph with known dual",
-[IsDigraph and HasDigraphDualAttr], SUM_FLAGS, DigraphDualAttr);
-
-InstallMethod(DigraphDualAttr, "for an immutable digraph", [IsImmutableDigraph],
-DigraphDual);
-
-InstallMethod(ReducedDigraph, "for a digraph by out-neighbours",
+InstallMethodThatReturnsDigraph(ReducedDigraph,
+"for a digraph by out-neighbours",
 [IsDigraphByOutNeighboursRep],
 function(D)
   local v, niv, old, C, i;
@@ -1435,18 +1534,8 @@ function(D)
     fi;
   od;
   C := InducedSubdigraph(D, ListBlist(v, niv));
-  # Store result if input (and hence output) immutable
-  if IsImmutableDigraph(D) then
-    SetReducedDigraphAttr(D, C);
-  fi;
   return C;
 end);
-
-InstallMethod(ReducedDigraph, "for a digraph with known reduced digraph",
-[IsDigraph and HasReducedDigraphAttr], SUM_FLAGS, ReducedDigraphAttr);
-
-InstallMethod(ReducedDigraphAttr, "for an immutable digraph",
-[IsImmutableDigraph], ReducedDigraph);
 
 InstallMethod(DigraphRemoveAllMultipleEdges,
 "for a mutable digraph by out-neighbours",
@@ -1475,10 +1564,8 @@ function(D)
   return D;
 end);
 
-InstallMethod(DigraphRemoveAllMultipleEdges, "for an immutable digraph",
-[IsImmutableDigraph], DigraphRemoveAllMultipleEdgesAttr);
-
-InstallMethod(DigraphRemoveAllMultipleEdgesAttr, "for an immutable digraph",
+InstallMethodThatReturnsDigraph(DigraphRemoveAllMultipleEdges,
+"for an immutable digraph",
 [IsImmutableDigraph],
 function(D)
   if IsMultiDigraph(D) then
@@ -1720,10 +1807,10 @@ end);
 InstallMethod(MaximalAntiSymmetricSubdigraph, "for a digraph by out-neighbours",
 [IsDigraphByOutNeighboursRep],
 function(D)
-  local n, C, m, out, i, j;
+  local n, C, m, out, pos, j, i, k;
 
   n := DigraphNrVertices(D);
-  if not IsMultiDigraph(D) and (n <= 1 or IsAntisymmetricDigraph(D)) then
+  if not IsMultiDigraph(D) and IsAntisymmetricDigraph(D) then
     return D;
   elif IsMultiDigraph(D) then
     if HasDigraphRemoveAllMultipleEdgesAttr(D) then
@@ -1757,10 +1844,16 @@ function(D)
     out := C!.OutNeighbours;
     Perform(out, Sort);
     for i in [1 .. n] do
-      for j in out[i] do
-        if i <> j then
-          RemoveSet(out[j], i);
-        fi;
+      # For all edges i -> j with i < j, (try to) remove the edge j -> i.
+      pos := PositionSorted(out[i], i);
+      if pos > Length(out[i]) then
+        continue;
+      elif out[i][pos] = i then
+        pos := pos + 1;
+      fi;
+      for k in [pos .. Length(out[i])] do
+        j := out[i][k];
+        RemoveSet(out[j], i);
       od;
     od;
   fi;
@@ -2060,3 +2153,237 @@ InstallMethod(DigraphMycielskian,
 
 InstallMethod(DigraphMycielskianAttr, "for an immutable digraph",
 [IsImmutableDigraph], DigraphMycielskian);
+
+# Uses a simple greedy algorithm.
+BindGlobal("DIGRAPHS_MaximalMatching",
+function(D)
+  local mate, u, v;
+  mate := ListWithIdenticalEntries(DigraphNrVertices(D), 0);
+  for v in DigraphVertices(D) do
+    if mate[v] = 0 then
+      for u in OutNeighboursOfVertex(D, v) do
+        if mate[u] = 0 then
+          mate[u] := v;
+          mate[v] := u;
+          break;
+        fi;
+      od;
+    fi;
+  od;
+  return mate;
+end);
+
+# For bipartite digraphs implements the Hopcroft-Karp matching algorithm,
+# complexity O(m*sqrt(n))
+BindGlobal("DIGRAPHS_BipartiteMatching",
+function(D, mate)
+  local U, dist, inf, dfs, bfs, u;
+
+  U := DigraphBicomponents(D);
+  U := U[PositionMinimum(U, Length)];
+
+  bfs := function()
+    local v, que, q;
+    que := [];
+    for v in U do
+      if mate[v] = inf then
+        dist[v] := 0;
+        Add(que, v);
+      else
+        dist[v] := inf;
+      fi;
+    od;
+    dist[inf] := inf;
+
+    q := 1;
+    while q <= Length(que) do
+      if dist[que[q]] < dist[inf] then
+        for v in OutNeighborsOfVertex(D, que[q]) do
+          if dist[mate[v]] = inf then
+            dist[mate[v]] := dist[que[q]] + 1;
+            Add(que, mate[v]);
+          fi;
+        od;
+      fi;
+      q := q + 1;
+    od;
+    return dist[inf] <> inf;
+  end;
+
+  dfs := function(u)
+    local v;
+    if u = inf then
+      return true;
+    fi;
+    for v in OutNeighborsOfVertex(D, u) do
+      if dist[mate[v]] = dist[u] + 1 and dfs(mate[v]) then
+        mate[v] := u;
+        mate[u] := v;
+        return true;
+      fi;
+    od;
+    dist[u] := inf;
+    return false;
+  end;
+
+  inf  := DigraphNrVertices(D) + 1;
+  dist := ListWithIdenticalEntries(inf, inf);
+  for u in [1 .. Length(mate)] do
+    if mate[u] = 0 then
+      mate[u] := inf;
+    fi;
+  od;
+
+  while bfs() do
+    for u in U do
+      if mate[u] = inf then dfs(u);
+      fi;
+    od;
+  od;
+
+  for u in [1 .. DigraphNrVertices(D)] do
+    if mate[u] = inf then
+      mate[u] := 0;
+    fi;
+  od;
+
+  return mate;
+end);
+
+# For general digraphs implements a modified version of Gabow's maximum matching
+# algorithm, complexity O(m*n*log(n)).
+BindGlobal("DIGRAPHS_GeneralMatching",
+function(D, mate)
+  local blos, pred, time, t, tj, u, dfs, mark, blosfind;
+
+  blosfind := function(x)
+    if x <> blos[x] then
+      blos[x] := blosfind(blos[x]);
+    fi;
+    return blos[x];
+  end;
+
+  mark := function(v, x, b, path)
+    while blosfind(v) <> b do
+      pred[v] := x;
+      x       := mate[v];
+      Add(tj, v);
+      Add(tj, x);
+      if time[x] = 0 then
+        t       := t + 1;
+        time[x] := t;
+        Add(path, x);
+      fi;
+      v := pred[x];
+    od;
+  end;
+
+  dfs := function(v)
+    local x, bx, bv, b, y, z, path;
+    for x in OutNeighboursOfVertex(D, v) do
+      bv := blosfind(v);
+      bx := blosfind(x);
+      if bx <> bv then
+        if time[x] > 0 then
+          path := [];
+          tj   := [];
+          if time[bx] < time[bv] then
+            b := bx;
+            mark(v, x, b, path);
+          else
+            b := bv;
+            mark(x, v, b, path);
+          fi;
+          for z in tj do
+            blos[z] := b;
+          od;
+          for z in path do
+            if dfs(z) then
+              return true;
+            fi;
+          od;
+        elif pred[x] = 0 then
+          pred[x] := v;
+          if mate[x] = 0 then
+            while x <> 0 do
+              y       := pred[x];
+              v       := mate[y];
+              mate[y] := x;
+              mate[x] := y;
+              x       := v;
+            od;
+            return true;
+          fi;
+          if time[mate[x]] = 0 then
+            t             := t + 1;
+            time[mate[x]] := t;
+            if dfs(mate[x]) then
+              return true;
+            fi;
+          fi;
+        fi;
+      fi;
+    od;
+    return false;
+  end;
+
+  time := ListWithIdenticalEntries(DigraphNrVertices(D), 0);
+  blos := [1 .. DigraphNrVertices(D)];
+  pred := ListWithIdenticalEntries(DigraphNrVertices(D), 0);
+  t    := 0;
+  for u in DigraphVertices(D) do
+    if mate[u] = 0 then
+      t       := t + 1;
+      time[u] := t;
+      if dfs(u) then
+        time := ListWithIdenticalEntries(DigraphNrVertices(D), 0);
+        blos := [1 .. DigraphNrVertices(D)];
+        pred := ListWithIdenticalEntries(DigraphNrVertices(D), 0);
+      fi;
+    fi;
+  od;
+
+  return mate;
+end);
+
+BindGlobal("DIGRAPHS_MateToMatching",
+function(D, mate)
+  local u, M;
+  M := [];
+  for u in DigraphVertices(D) do
+    if u <= mate[u] then
+      if IsDigraphEdge(D, u, mate[u]) then
+        Add(M, [u, mate[u]]);
+      elif IsDigraphEdge(D, mate[u], u) then
+        Add(M, [mate[u], u]);
+      fi;
+    fi;
+  od;
+  return Set(M);
+end);
+
+InstallMethod(DigraphMaximalMatching, "for a digraph", [IsDigraph],
+D -> DIGRAPHS_MateToMatching(D, DIGRAPHS_MaximalMatching(D)));
+
+InstallMethod(DigraphMaximumMatching, "for a digraph", [IsDigraph],
+function(D)
+  local mateG, mateD, G, M, i, lab;
+  G     := DigraphImmutableCopy(D);
+  G     := InducedSubdigraph(G, Difference(DigraphVertices(G), DigraphLoops(G)));
+  lab   := DigraphVertexLabels(G);
+  G     := DigraphSymmetricClosure(G);
+  mateG := DIGRAPHS_MaximalMatching(G);
+  if IsBipartiteDigraph(G) then
+    mateG := DIGRAPHS_BipartiteMatching(G, mateG);
+  else
+    mateG := DIGRAPHS_GeneralMatching(G, mateG);
+  fi;
+  mateD := ListWithIdenticalEntries(DigraphNrVertices(D), 0);
+  for i in DigraphVertices(G) do
+    if mateG[i] <> 0 then
+      mateD[lab[i]] := lab[mateG[i]];
+    fi;
+  od;
+  M := List(DigraphLoops(D), x -> [x, x]);
+  return Union(M, DIGRAPHS_MateToMatching(D, mateD));
+end);

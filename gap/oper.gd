@@ -13,6 +13,8 @@ DeclareOperation("DigraphAddVertex", [IsDigraph]);
 DeclareOperation("DigraphAddVertex", [IsDigraph, IsObject]);
 DeclareOperation("DigraphAddVertices", [IsDigraph, IsInt]);
 DeclareOperation("DigraphAddVertices", [IsDigraph, IsList]);
+# 3-arg version of DigraphAddVertices is included for backwards compatibility.
+DeclareOperation("DigraphAddVertices", [IsDigraph, IsInt, IsList]);
 
 DeclareOperation("DigraphRemoveVertex", [IsDigraph, IsPosInt]);
 DeclareOperation("DigraphRemoveVertices", [IsDigraph, IsList]);
@@ -37,6 +39,8 @@ DeclareOperation("DigraphClosure", [IsDigraph, IsPosInt]);
 DeclareGlobalFunction("DigraphDisjointUnion");
 DeclareGlobalFunction("DigraphJoin");
 DeclareGlobalFunction("DigraphEdgeUnion");
+DeclareGlobalFunction("DigraphCartesianProduct");
+DeclareGlobalFunction("DigraphDirectProduct");
 DeclareGlobalFunction("DIGRAPHS_CombinationOperProcessArgs");
 
 # 4. Actions . . .
@@ -84,11 +88,16 @@ DeclareOperation("IsUndirectedSpanningForest", [IsDigraph, IsDigraph]);
 
 DeclareOperation("IsMatching", [IsDigraph, IsHomogeneousList]);
 DeclareOperation("IsMaximalMatching", [IsDigraph, IsHomogeneousList]);
+DeclareOperation("IsMaximumMatching", [IsDigraph, IsHomogeneousList]);
 DeclareOperation("IsPerfectMatching", [IsDigraph, IsHomogeneousList]);
 
 # 9. Connectivity . . .
 DeclareOperation("DigraphFloydWarshall",
                  [IsDigraph, IsFunction, IsObject, IsObject]);
+DeclareOperation("DigraphDijkstra",
+                 [IsDigraph, IsPosInt]);
+DeclareOperation("DigraphDijkstra",
+                 [IsDigraph, IsPosInt, IsPosInt]);
 
 DeclareOperation("DigraphConnectedComponent", [IsDigraph, IsPosInt]);
 DeclareOperation("DigraphStronglyConnectedComponent", [IsDigraph, IsPosInt]);

@@ -4,6 +4,7 @@
     <#Include Label="DigraphNrVertices">
     <#Include Label="DigraphEdges">
     <#Include Label="DigraphNrEdges">
+    <#Include Label="DigraphNrLoops">
     <#Include Label="DigraphSinks">
     <#Include Label="DigraphSources">
     <#Include Label="DigraphTopologicalSort">
@@ -15,6 +16,8 @@
     <#Include Label="DigraphOutEdges">
     <#Include Label="IsDigraphEdge">
     <#Include Label="IsMatching">
+    <#Include Label="DigraphMaximalMatching">
+    <#Include Label="DigraphMaximumMatching">
   </Section>
 
   <Section><Heading>Neighbours and degree</Heading>
@@ -52,6 +55,8 @@
     <#Include Label="DigraphStronglyConnectedComponent">
     <#Include Label="DigraphBicomponents">
     <#Include Label="ArticulationPoints">
+    <#Include Label="Bridges">
+    <#Include Label="StrongOrientation">
     <#Include Label="DigraphPeriod">
     <#Include Label="DigraphFloydWarshall">
     <#Include Label="IsReachable">
@@ -65,6 +70,7 @@
     <#Include Label="DigraphDegeneracyOrdering">
     <#Include Label="HamiltonianPath">
     <#Include Label="NrSpanningTrees">
+    <#Include Label="DigraphDijkstra">
   </Section>
 
   <Section><Heading>Cayley graphs of groups</Heading>

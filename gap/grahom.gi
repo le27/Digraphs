@@ -80,7 +80,7 @@ function(arg)
                                     DigraphWelshPowellOrder(D));
 
   if (limit = infinity or Length(gens) < limit_arg) and IsImmutableDigraph(D)
-      then
+      and colours = fail then
     SetGeneratorsOfEndomorphismMonoidAttr(D, out);
   fi;
   return out;
@@ -451,29 +451,51 @@ end);
 # IsDigraph{Homo/Epi/...}morphism
 ########################################################################
 
+# Given:
+#
+# 1) two digraphs <src> and <ran>,
+# 2) a transformation <x> mapping the vertices of <src> to <ran>, and
+# 3) two lists <cols1> and <cols2> of positive integers defining vertex
+#    colourings of <src> and <ran>,
+#
+# this operation tests whether <x> respects the colouring, i.e. whether for all
+# vertices i in <src>, cols[i] = cols[i ^ x].
+InstallMethod(DigraphsRespectsColouring,
+[IsDigraph, IsDigraph, IsTransformation, IsList, IsList],
+function(src, ran, x, cols1, cols2)
+  if Maximum(OnTuples(DigraphVertices(src), x)) > DigraphNrVertices(ran) then
+    ErrorNoReturn("the third argument <x> must map the vertices of the first ",
+                  "argument <src> into the vertices of the second argument ",
+                  "<ran>,");
+  fi;
+  DIGRAPHS_ValidateVertexColouring(DigraphNrVertices(src), cols1);
+  DIGRAPHS_ValidateVertexColouring(DigraphNrVertices(ran), cols2);
+
+  return ForAll(DigraphVertices(src), i -> cols1[i] = cols2[i ^ x]);
+end);
+
+InstallMethod(DigraphsRespectsColouring,
+[IsDigraph, IsDigraph, IsPerm, IsList, IsList],
+function(src, ran, x, cols1, cols2)
+  return DigraphsRespectsColouring(src, ran, AsTransformation(x), cols1, cols2);
+end);
+
 InstallMethod(IsDigraphHomomorphism,
 "for a digraph by out-neighbours, a digraph, and a perm",
 [IsDigraphByOutNeighboursRep, IsDigraph, IsPerm],
-function(src, ran, x)
-  local i, j;
-  if IsMultiDigraph(src) or IsMultiDigraph(ran) then
-    ErrorNoReturn("the 1st and 2nd arguments <src> and <ran> must be digraphs",
-                  " with no multiple edges,");
-  elif LargestMovedPoint(x) > DigraphNrVertices(src) then
-    return false;
-  fi;
-  for i in DigraphVertices(src) do
-    for j in OutNeighbours(src)[i] do
-      if not IsDigraphEdge(ran, i ^ x, j ^ x) then
-        return false;
-      fi;
-    od;
-  od;
-  return true;
-end);
+{src, ran, x} -> IsDigraphHomomorphism(src, ran, AsTransformation(x)));
+
+InstallMethod(IsDigraphHomomorphism,
+"for a digraph by out-neighbours, a digraph, a perm, and two lists",
+[IsDigraphByOutNeighboursRep, IsDigraph, IsPerm, IsList, IsList],
+{src, ran, x, c1, c2} ->
+IsDigraphHomomorphism(src, ran, AsTransformation(x), c1, c2));
 
 InstallMethod(IsDigraphEndomorphism, "for a digraph and a perm",
 [IsDigraph, IsPerm], IsDigraphAutomorphism);
+
+InstallMethod(IsDigraphEndomorphism, "for a digraph and a perm",
+[IsDigraph, IsPerm, IsList], IsDigraphAutomorphism);
 
 InstallMethod(IsDigraphHomomorphism,
 "for a digraph by out-neighbours, digraph, and transformation",
@@ -496,9 +518,23 @@ function(src, ran, x)
   return true;
 end);
 
+InstallMethod(IsDigraphHomomorphism,
+"for a digraph by out-neighbours, a digraph, a transformation, and two lists",
+[IsDigraphByOutNeighboursRep, IsDigraph, IsTransformation, IsList, IsList],
+
+function(src, ran, x, cols1, cols2)
+  return IsDigraphHomomorphism(src, ran, x) and
+         DigraphsRespectsColouring(src, ran, x, cols1, cols2);
+end);
+
 InstallMethod(IsDigraphEndomorphism, "for a digraph and a transformation",
 [IsDigraph, IsTransformation],
 {D, x} -> IsDigraphHomomorphism(D, D, x));
+
+InstallMethod(IsDigraphEndomorphism,
+"for a digraph, transformation, and a list",
+[IsDigraph, IsTransformation, IsList],
+{D, x, c} -> IsDigraphHomomorphism(D, D, x, c, c));
 
 InstallMethod(IsDigraphEpimorphism, "for digraph, digraph, and transformation",
 [IsDigraph, IsDigraph, IsTransformation],
@@ -507,11 +543,26 @@ function(src, ran, x)
     and OnSets(DigraphVertices(src), x) = DigraphVertices(ran);
 end);
 
+InstallMethod(IsDigraphEpimorphism, "for digraph, digraph, and transformation",
+[IsDigraph, IsDigraph, IsTransformation, IsList, IsList],
+function(src, ran, x, cols1, cols2)
+  return IsDigraphEpimorphism(src, ran, x) and
+         DigraphsRespectsColouring(src, ran, x, cols1, cols2);
+end);
+
 InstallMethod(IsDigraphEpimorphism, "for digraph, digraph, and perm",
 [IsDigraph, IsDigraph, IsPerm],
 function(src, ran, x)
   return IsDigraphHomomorphism(src, ran, x)
     and OnSets(DigraphVertices(src), x) = DigraphVertices(ran);
+end);
+
+InstallMethod(IsDigraphEpimorphism,
+"for digraph, digraph, perm, list, and list",
+[IsDigraph, IsDigraph, IsPerm, IsList, IsList],
+function(src, ran, x, cols1, cols2)
+  return IsDigraphEpimorphism(src, ran, x)
+    and DigraphsRespectsColouring(src, ran, x, cols1, cols2);
 end);
 
 InstallMethod(IsDigraphMonomorphism,
@@ -522,8 +573,23 @@ function(src, ran, x)
     and IsInjectiveListTrans(DigraphVertices(src), x);
 end);
 
+InstallMethod(IsDigraphMonomorphism,
+"for digraph, digraph, transformation, list, list",
+[IsDigraph, IsDigraph, IsTransformation, IsList, IsList],
+function(src, ran, x, cols1, cols2)
+  return IsDigraphMonomorphism(src, ran, x)
+    and DigraphsRespectsColouring(src, ran, x, cols1, cols2);
+end);
+
 InstallMethod(IsDigraphMonomorphism, "for digraph, digraph, and perm",
 [IsDigraph, IsDigraph, IsPerm], IsDigraphHomomorphism);
+
+InstallMethod(IsDigraphMonomorphism, "for digraph, digraph, perm, list, list",
+[IsDigraph, IsDigraph, IsPerm, IsList, IsList],
+function(src, ran, x, cols1, cols2)
+  return IsDigraphHomomorphism(src, ran, x)
+    and DigraphsRespectsColouring(src, ran, x, cols1, cols2);
+end);
 
 InstallMethod(IsDigraphEmbedding,
 "for digraph, digraph by out-neighbours, and transformation",
@@ -549,6 +615,14 @@ function(src, ran, x)
 end);
 
 InstallMethod(IsDigraphEmbedding,
+"for digraph, digraph by out-neighbours, transformation, list, and list",
+[IsDigraph, IsDigraphByOutNeighboursRep, IsTransformation, IsList, IsList],
+function(src, ran, x, cols1, cols2)
+  return IsDigraphEmbedding(src, ran, x)
+    and DigraphsRespectsColouring(src, ran, x, cols1, cols2);
+end);
+
+InstallMethod(IsDigraphEmbedding,
 "for a digraph, a digraph by out-neighbours, and a perm",
 [IsDigraph, IsDigraphByOutNeighboursRep, IsPerm],
 function(src, ran, x)
@@ -568,6 +642,14 @@ function(src, ran, x)
     fi;
   od;
   return true;
+end);
+
+InstallMethod(IsDigraphEmbedding,
+"for a digraph, a digraph by out-neighbours, a perm, a list, and a list",
+[IsDigraph, IsDigraphByOutNeighboursRep, IsPerm, IsList, IsList],
+function(src, ran, x, cols1, cols2)
+  return IsDigraphEmbedding(src, ran, x)
+    and DigraphsRespectsColouring(src, ran, x, cols1, cols2);
 end);
 
 InstallMethod(IsDigraphColouring, "for a digraph by out-neighbours and a list",

@@ -328,6 +328,55 @@ gap> D := NullDigraph(IsMutableDigraph, 10);
 gap> MakeImmutable(D);
 <immutable empty digraph with 10 vertices>
 
+# Issue 272: ViewString for known non-complete digraphs
+gap> D := Digraph([[2], []]);;
+gap> IsCompleteDigraph(D);
+false
+gap> D;
+<immutable digraph with 2 vertices, 1 edge>
+
+# Issue 276: ViewString for mutable empty digraphs
+gap> D := EmptyDigraph(IsMutableDigraph, 3);
+<mutable empty digraph with 3 vertices>
+gap> IsAcyclicDigraph(D);
+true
+gap> DigraphDisjointUnion(D, CycleDigraph(IsMutableDigraph, 3));
+<mutable digraph with 6 vertices, 3 edges>
+gap> IsAcyclicDigraph(D);
+false
+gap> D := EmptyDigraph(IsMutableDigraph, 3);
+<mutable empty digraph with 3 vertices>
+gap> IsAcyclicDigraph(D);
+true
+gap> DigraphDisjointUnion(D, CycleDigraph(IsImmutableDigraph, 3));
+<mutable digraph with 6 vertices, 3 edges>
+gap> IsAcyclicDigraph(D);
+false
+
+# Issue 276: Correct mutability for DigraphDisjointUnion
+gap> D := EmptyDigraph(IsMutableDigraph, 3);
+<mutable empty digraph with 3 vertices>
+gap> DigraphDisjointUnion(D, CycleDigraph(3));
+<mutable digraph with 6 vertices, 3 edges>
+gap> IsMutable(D!.OutNeighbours);
+true
+gap> ForAll(D!.OutNeighbours, IsMutable);
+true
+
+# Issue 284: HomomorphismDigraphsFinder not finding any homomorphisms
+gap> HomomorphismDigraphsFinder(NullDigraph(1), NullDigraph(100), fail, [], infinity,
+> fail, 2, [1 .. 100], [], fail, fail);
+[ IdentityTransformation ]
+gap> HomomorphismDigraphsFinder(NullDigraph(1), NullDigraph(100), fail, [], infinity,
+> fail, 2, [1 .. 100], [], fail, fail);
+[ IdentityTransformation ]
+gap> HomomorphismDigraphsFinder(NullDigraph(2), NullDigraph(2), fail, [], infinity,  
+> fail, 2, [1, 2], [], fail, fail); 
+[ IdentityTransformation ]
+gap> HomomorphismDigraphsFinder(NullDigraph(1), NullDigraph(100), fail, [], infinity,
+> fail, 2, [1 .. 100], [], fail, fail);
+[ IdentityTransformation ]
+
 #  DIGRAPHS_UnbindVariables
 gap> Unbind(gr2);
 gap> Unbind(gr);

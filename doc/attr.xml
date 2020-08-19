@@ -133,6 +133,30 @@ gap> DigraphNrEdges(D);
 </ManSection>
 <#/GAPDoc>
 
+<#GAPDoc Label="DigraphNrLoops">
+<ManSection>
+  <Attr Name="DigraphNrLoops" Arg="digraph"/>
+  <Returns>An integer.</Returns>
+  <Description>
+    This function returns the number of loops of the digraph <A>digraph</A>. See <Ref Prop="DigraphHasLoops"/>. <P/>
+    <Example><![CDATA[
+gap> D := Digraph([[2, 3], [1, 4], [3, 3, 5], [], [2, 5]]);
+<immutable multidigraph with 5 vertices, 9 edges>
+gap> DigraphNrLoops(D);
+3
+gap> D := EmptyDigraph(5);
+<immutable empty digraph with 5 vertices>
+gap> DigraphNrLoops(D);
+0
+gap> D := CompleteDigraph(5);
+<immutable complete digraph with 5 vertices>
+gap> DigraphNrLoops(D);
+0
+]]></Example>
+  </Description>
+</ManSection>
+<#/GAPDoc>
+
 <#GAPDoc Label="RangeSourceDigraph">
 <ManSection>
   <Attr Name="DigraphRange" Arg="digraph"/>
@@ -181,7 +205,7 @@ gap> DigraphSource(D);
     there exists an edge with source <C>i</C> and range <C>j</C> in
     <A>digraph</A>. <P/>
 
-    The function <C>OutNeighbours</C> returns an immutable list of immutable
+    The function <C>OutNeighbours</C> returns an immutable list of
     lists, whereas the function <C>OutNeighboursMutableCopy</C> returns a copy
     of <C>OutNeighbours</C> which is a mutable list of mutable lists. <P/>
 
@@ -228,7 +252,7 @@ gap> OutNeighbours(D);
     there exists an edge with source <C>j</C> and range <C>i</C> in
     <A>digraph</A>. <P/>
 
-    The function <C>InNeighbours</C> returns an immutable list of immutable
+    The function <C>InNeighbours</C> returns an immutable list of
     lists, whereas the function <C>InNeighboursMutableCopy</C> returns a copy
     of <C>InNeighbours</C> which is a mutable list of mutable lists. <P/>
 
@@ -323,7 +347,7 @@ false
     in <A>digraph</A> with source <C>i</C> and range <C>j</C>. If <A>digraph</A>
     has no vertices, then the empty list is returned. <P/>
 
-    The function <C>AdjacencyMatrix</C> returns an immutable list of immutable
+    The function <C>AdjacencyMatrix</C> returns an immutable list of
     lists, whereas the function <C>AdjacencyMatrixMutableCopy</C> returns a copy
     of <C>AdjacencyMatrix</C> that is a mutable list of mutable lists. <P/>
 
@@ -621,7 +645,7 @@ gap> DigraphSinks(D);
     element of the strongly connected component <C>comps[id[i]]</C>. <P/>
 
     The method used in this function is a non-recursive version of Gabow's
-    Algorithm <Cite Key="Gabow2000aa"/> and has complexity <M>O(m+n)</M> where
+    Algorithm <Cite Key="Gab00"/> and has complexity <M>O(m+n)</M> where
     <M>m</M> is the number of edges (counting multiple edges as one) and
     <M>n</M> is the number of vertices in the digraph. <P/>
 
@@ -1031,7 +1055,6 @@ gap> DigraphUndirectedGirth(D);
   <Attr Name="ArticulationPoints" Arg="digraph"/>
   <Returns>A list of vertices.</Returns>
   <Description>
-
     A connected digraph is <E>biconnected</E> if it is still connected (in the
     sense of <Ref Prop="IsConnectedDigraph"/>) when any vertex is removed. 
     If the digraph <A>digraph</A> is not biconnected but is connected, then any
@@ -1042,13 +1065,22 @@ gap> DigraphUndirectedGirth(D);
     <A>digraph</A>, if any, and, in particular, returns the empty list if
     <A>digraph</A> is not connected. <P/>
 
-    Multiple edges and loops are ignored by this method. <P/>
+    Multiple edges are ignored by this method. <P/>
 
     The method used in this operation has complexity <M>O(m+n)</M> where
-    <M>m</M> is the number of edges (counting multiple edges as one, and not
-    counting loops) and <M>n</M> is the number of vertices in the digraph.
+    <M>m</M> is the number of edges and <M>n</M> is the number of vertices in
+    the digraph.<P/>
+      
+    If <A>D</A> has a bridge (see <Ref Attr="Bridges"/>), then a node incident
+    to the bridge is an articulation point if and only if it has degree at
+    least <M>2</M>.  It follows that if <A>D</A> has a bridge and at least
+    <M>3</M> nodes, then at least one of the nodes incident to the bridge is
+    an articulation point.  The converse does not hold, there are digraphs
+    with articulation points, but no bridges.
+    <P/>
 
-    See also <Ref Prop="IsBiconnectedDigraph"/>.
+    See also <Ref Prop="IsBiconnectedDigraph"/> and 
+    <Ref Prop="IsBridgelessDigraph"/>.
 <Example><![CDATA[
 gap> ArticulationPoints(CycleDigraph(5));
 [  ]
@@ -1063,6 +1095,102 @@ gap> D := ChainDigraph(IsMutableDigraph, 4);
 <mutable digraph with 4 vertices, 3 edges>
 gap> ArticulationPoints(D);
 [ 3, 2 ]
+]]></Example>
+  </Description>
+</ManSection>
+<#/GAPDoc>
+
+<#GAPDoc Label="StrongOrientation">
+<ManSection>
+  <Oper Name="StrongOrientation" Arg="D"/>
+  <Attr Name="StrongOrientationAttr" Arg="D"/>
+  <Returns>A digraph or <K>fail</K>.</Returns>
+  <Description>
+    A <E>strong orientation</E> of a connected symmetric digraph <A>D</A> (if
+    it exists) is a strongly connected subdigraph <C>C</C> of <A>D</A> such
+    that for every edge <C>[u, v]</C> of <A>D</A> either <C>[u, v]</C> or
+    <C>[v, u]</C> is an edge of <C>C</C> but not both.  Robbin's Theorem states
+    that a digraph admits a strong orientation if and only if it is
+    bridgeless (see <Ref Prop="IsBridgelessDigraph"/>). 
+    <P/>
+
+    This operation returns a strong orientation of the digraph <A>D</A> if 
+    <A>D</A> is symmetric and <A>D</A> admits a strong orientation. If <A>D</A>
+    is symmetric but does not admit a strong orientation, then <K>fail</K> is
+    returned. If <A>D</A> is not symmetric, then an error is given. 
+    <P/>
+
+    If <A>D</A> is immutable, <C>StrongOrientation(<A>D</A>)</C> returns an
+    immutable digraph, and if <A>D</A> is mutable, then
+    <C>StrongOrientation(<A>D</A>)</C> returns a mutable digraph. <P/>
+
+    The method used in this operation has complexity <M>O(m+n)</M> where
+    <M>m</M> is the number of edges and <M>n</M> is the number of vertices in
+    the digraph.
+<Example><![CDATA[
+gap> StrongOrientation(DigraphSymmetricClosure(CycleDigraph(5))) 
+> = CycleDigraph(5);
+true
+gap> D := DigraphSymmetricClosure(Digraph(
+> [[2, 7], [3, 5], [4], [2], [6], [1], []]));;
+gap> IsBridgelessDigraph(D);
+false
+gap> StrongOrientation(D);
+fail
+gap> StrongOrientation(NullDigraph(0));
+<immutable empty digraph with 0 vertices>
+gap> StrongOrientation(DigraphDisjointUnion(CompleteDigraph(3), 
+>                                           CompleteDigraph(3)));
+fail
+]]></Example>
+  </Description>
+</ManSection>
+<#/GAPDoc>
+
+<#GAPDoc Label="Bridges">
+<ManSection>
+  <Attr Name="Bridges" Arg="D"/>
+  <Returns>A (possibly empty) list of edges.</Returns>
+  <Description>
+    A connected digraph is <E>2-edge-connected</E> if it is still connected (in
+    the sense of <Ref Prop="IsConnectedDigraph"/>) when any edge is
+    removed.  If the digraph <A>D</A> is not 2-edge-connected but is
+    connected, then any edge <C>[u, v]</C> of <A>D</A> whose removal
+    makes the resulting digraph disconnected is called a <E>bridge</E>.<P/>
+
+    <C>Bridges</C> returns a list of the bridges of <A>D</A>, if any, and, in
+    particular, returns the empty list if <A>D</A> is not connected. <P/>
+
+    Multiple edges are ignored by this method. <P/>
+
+    The method used in this operation has complexity <M>O(m+n)</M> where
+    <M>m</M> is the number of edges and <M>n</M> is the number of vertices in
+    the digraph.
+    <P/>
+
+    If <A>D</A> has a bridge, then a node incident to the bridge is an
+    articulation point (see <Ref Attr="ArticulationPoints"/>) if and only if
+    it has degree at least <M>2</M>.  It follows that if <A>D</A> has a
+    bridge and at least <M>3</M> nodes, then at least one of the nodes
+    incident to the bridge is an articulation point. The converse does not
+    hold, there are digraphs with articulation points, but no bridges.
+    <P/>
+
+    See also <Ref Prop="IsBiconnectedDigraph"/> and 
+    <Ref Prop="IsBridgelessDigraph"/>.
+<Example><![CDATA[
+gap> D := Digraph([[2, 5], [1, 3, 4, 5], [2, 4], [2, 3], [1, 2]]);
+<immutable digraph with 5 vertices, 12 edges>
+gap> Bridges(D);
+[  ]
+gap> D := Digraph([[2], [3], [4], [2]]);
+<immutable digraph with 4 vertices, 4 edges>
+gap> Bridges(D);
+[ [ 1, 2 ] ]
+gap> Bridges(ChainDigraph(2));
+[ [ 1, 2 ] ]
+gap> ArticulationPoints(ChainDigraph(2));
+[  ]
 ]]></Example>
   </Description>
 </ManSection>
@@ -1451,11 +1579,10 @@ gap> NrSpanningTrees(D);
   <Returns>A &Grape; package graph.</Returns>
   <Description>
     If <A>digraph</A> is a digraph, then this method returns the same as
-    <Ref Oper="Graph"/>, except that the result will be stored as a mutable
-    attribute of <A>digraph</A>. <P/>
-
-    If <C>AsGraph(</C><A>digraph</A><C>)</C> is called subsequently,
-    then the same &GAP; object will be returned as before.
+    <Ref Oper="Graph"/>, except that if <A>digraph</A> is immutable, then the
+    result will be stored as a mutable attribute of <A>digraph</A>.
+    In this latter case, when <C>AsGraph(</C><A>digraph</A><C>)</C> is called
+    subsequently, the same &GAP; object will be returned as before.
 
     <Example><![CDATA[
 gap> D := Digraph([[1, 2], [3], []]);
@@ -1588,11 +1715,12 @@ gap> D;
     See <Ref Oper="InducedSubdigraph"/>.
     <P/>
 
-    The vertex and edge labels of the graph are preserved. A vertex in the new
-    digraph can be matched to the corresponding vertex in <A>digraph</A> by
-    using the label.<P/>
-
-    The ordering of the vertices is preserved.<P/>
+    The ordering of the remaining vertices of <A>digraph</A> is preserved, as are
+    the labels of the remaining vertices and edges;
+    see <Ref Oper="DigraphVertexLabels"/> and <Ref Oper="DigraphEdgeLabels"/>.
+    This can allow one to match a vertex in the reduced digraph to the
+    corresponding vertex in <A>digraph</A>.
+    <P/>
 
     If <A>digraph</A> is immutable, then a new immutable digraph is returned.
     Otherwise, the isolated vertices of the mutable digraph <A>digraph</A> are
@@ -1822,16 +1950,18 @@ gap> D;
   <Returns>A digraph.</Returns>
   <Description>
     If <A>digraph</A> is a digraph, then <C>MaximalAntiSymmetricSubdigraph</C>
-    returns a anti-symmetric subdigraph of <A>digraph</A> which does not have
-    multiple edges, has the same vertex set as <A>digraph</A>, and whose
-    edge list is formed from <A>digraph</A> by ignoring the multiplicity of
-    edges, and by having either an edge from the vertex <C>u</C> to the vertex
-    <C>v</C>, or the edge from <C>v</C> to <C>u</C> (but not both) whenever
-    both edges belong to <A>digraph</A>.<P/>
+    returns an anti-symmetric subdigraph of <A>digraph</A> formed by
+    retaining the vertices of <A>digraph</A>, discarding any duplicate edges,
+    and discarding any edge <C>[i,j]</C> of <A>digraph</A> where <C>i > j</C>
+    and the reverse edge <C>[j,i]</C> is an edge of <A>digraph</A>.
+    In other words, for every
+    symmetric pair of edges <C>[i,j]</C> and <C>[j,i]</C> in <A>digraph</A>, where 
+    <C>i</C> and <C>j</C> are distinct, it discards the the edge
+    <M>[\max(i,j),\min(i,j)]</M>.
+    <P/>
 
     If <A>digraph</A> is immutable, then a new immutable digraph is returned.
-    Otherwise, the mutable digraph <A>digraph</A> is changed in-place into
-    such a digraph described above.<P/>
+    Otherwise, the mutable digraph <A>digraph</A> is changed in-place. <P/>
 
     See <Ref Prop="IsAntisymmetricDigraph"/> for more information.
     <Example><![CDATA[
@@ -2000,13 +2130,13 @@ gap> D;
     returns <K>fail</K>.  See <Ref Oper="IsUndirectedSpanningTree" /> for the
     definition of an undirected spanning tree.<P/>
 
-    If <A>digraph</A> is immutable, then a new immutable digraph is returned.
+    If <A>digraph</A> is immutable, then an immutable digraph is returned.
     Otherwise, the mutable digraph <A>digraph</A> is changed in-place into an
     undirected spanning tree of <A>digraph</A>.<P/>
 
-    Note that for a digraph that has an undirected spanning tree, the attribute
-    <C>UndirectedSpanningTree</C> returns the same digraph as the attribute
-    <C>UndirectedSpanningForest</C>.
+    Note that for an immutable digraph that has known undirected spanning tree,
+    the attribute <C>UndirectedSpanningTree</C> returns the same digraph as
+    the attribute <C>UndirectedSpanningForest</C>.
 
     <Example><![CDATA[
 gap> D := Digraph([[1, 2, 1, 3], [1], [4], [3, 4, 3]]);
@@ -2083,6 +2213,160 @@ gap> DigraphMycielskian(D);
 <mutable digraph with 11 vertices, 46 edges>
 gap> D;
 <mutable digraph with 11 vertices, 46 edges>
+]]></Example>
+  </Description>
+</ManSection>
+<#/GAPDoc>
+
+<#GAPDoc Label="DigraphCartesianProductProjections">
+<ManSection>
+  <Attr Name="DigraphCartesianProductProjections" Arg="digraph"/>
+  <Returns>A list of transformations.</Returns>
+  <Description>
+    If <A>digraph</A> is a Cartesian product digraph, 
+    <C>digraph = DigraphCartesianProduct(gr_1, gr_2, ... )</C>, then
+    <C>DigraphCartesianProductProjections</C> returns a list <C>proj</C>
+    such that <C>proj[i]</C> is the projection onto the <C>i</C>-th
+    coordinate of the product.
+    <P/>
+
+    A projection is an idempotent endomorphism of <A>digraph</A>. If
+    <C>gr1, gr2, ...</C> are all loopless digraphs, then the induced 
+    subdigraph of <A>digraph</A> on the image of <C>proj[i]</C> is 
+    isomorphic to <C>gr_i</C>.
+    <P/>
+
+    Currently this attribute is only set upon creating an immutable 
+    digraph via <C>DigraphCartesianProduct</C> and there is no way 
+    of calculating it for other digraphs.
+    <P/>
+
+    For more information see
+    <Ref Func="DigraphCartesianProduct" Label="for a list of digraphs"/> 
+
+    <Example><![CDATA[
+gap> D := DigraphCartesianProduct(ChainDigraph(3), CycleDigraph(4),
+> Digraph([[2], [2]]));;
+gap> HasDigraphCartesianProductProjections(D);
+true
+gap> proj := DigraphCartesianProductProjections(D);; Length(proj);
+3
+gap> IsIdempotent(proj[2]);
+true
+gap> RankOfTransformation(proj[3]);
+2
+gap> S := ImageSetOfTransformation(proj[2]);;
+gap> IsIsomorphicDigraph(CycleDigraph(4), InducedSubdigraph(D, S));
+true
+]]></Example>
+  </Description>
+</ManSection>
+<#/GAPDoc>
+
+<#GAPDoc Label="DigraphDirectProductProjections">
+<ManSection>
+  <Attr Name="DigraphDirectProductProjections" Arg="digraph"/>
+  <Returns>A list of transformations.</Returns>
+  <Description>
+    If <A>digraph</A> is a direct product digraph, 
+    <C>digraph = DigraphDirectProduct(gr_1, gr_2, ... )</C>, then
+    <C>DigraphDirectProductProjections</C> returns a list <C>proj</C>
+    such that <C>proj[i]</C> is the projection onto the <C>i</C>-th
+    coordinate of the product.
+    <P/>
+
+    A projection is an idempotent endomorphism of <A>digraph</A>. If
+    <C>gr1, gr2, ...</C> are all loopless digraphs, then the image 
+    of <A>digraph</A> under <C>proj[i]</C> is isomorphic to <C>gr_i</C>.
+    <P/>
+
+    Currently this attribute is only set upon creating an immutable
+    digraph via <C>DigraphDirectProduct</C> and there is no way of 
+    calculating it for other digraphs.
+    <P/>
+
+    For more information, see
+    <Ref Func="DigraphDirectProduct" Label="for a list of digraphs"/> 
+
+    <Example><![CDATA[
+gap> D := DigraphDirectProduct(ChainDigraph(3), CycleDigraph(4),
+> Digraph([[2], [2]]));;
+gap> HasDigraphDirectProductProjections(D);
+true
+gap> proj := DigraphDirectProductProjections(D);; Length(proj);
+3
+gap> IsIdempotent(proj[2]);
+true
+gap> RankOfTransformation(proj[3]);
+2
+gap> P := DigraphRemoveAllMultipleEdges(
+> ReducedDigraph(OnDigraphs(D, proj[2])));; 
+gap> IsIsomorphicDigraph(CycleDigraph(4), P);
+true
+]]></Example>
+  </Description>
+</ManSection>
+<#/GAPDoc>
+
+<#GAPDoc Label="DigraphMaximalMatching">
+<ManSection>
+  <Attr Name="DigraphMaximalMatching" Arg="digraph"/>
+  <Returns>A list of pairs of vertices.</Returns>
+  <Description>
+    This function returns a maximal matching of the digraph <A>digraph</A>.
+    <P/>
+
+    For the definition of a maximal matching, see <Ref Oper="IsMaximalMatching"/>. 
+
+    <Example><![CDATA[
+gap> D := DigraphFromDiSparse6String(".IeAoXCJU@|SHAe?d");
+<immutable digraph with 10 vertices, 13 edges>
+gap> M := DigraphMaximalMatching(D);; IsMaximalMatching(D, M);
+true
+gap> D := RandomDigraph(100);;
+gap> IsMaximalMatching(D, DigraphMaximalMatching(D));
+true
+gap> D := GeneralisedPetersenGraph(IsMutableDigraph, 9, 2);
+<mutable digraph with 18 vertices, 54 edges>
+gap> IsMaximalMatching(D, DigraphMaximalMatching(D));
+true
+]]></Example>
+  </Description>
+</ManSection>
+<#/GAPDoc>
+
+<#GAPDoc Label="DigraphMaximumMatching">
+<ManSection>
+  <Attr Name="DigraphMaximumMatching" Arg="digraph"/>
+  <Returns>A list of pairs of vertices.</Returns>
+  <Description>
+    This function returns a maximum matching of the digraph <A>digraph</A>.
+    <P/>
+
+    For the definition of a maximum matching, see <Ref Oper="IsMaximumMatching"/>.
+    If <A>digraph</A> is bipartite (see <Ref Oper="IsBipartiteDigraph"/>), then 
+    the algorithm used has complexity <C>O(m*sqrt(n))</C>. Otherwise for general 
+    graphs the complexity is <C>O(m*n*log(n))</C>. Here <C>n</C> is the number of vertices 
+    and <C>m</C> is the number of edges.
+
+    <Example><![CDATA[
+gap> D := DigraphFromDigraph6String("&I@EA_A?AdDp[_c??OO");
+<immutable digraph with 10 vertices, 23 edges>
+gap> M := DigraphMaximumMatching(D);; IsMaximalMatching(D, M);
+true
+gap> Length(M);
+5
+gap> D := Digraph([[5, 6, 7, 8], [6, 7, 8], [7, 8], [8], 
+>                  [], [], [], []]);;
+gap> M := DigraphMaximumMatching(D);
+[ [ 1, 5 ], [ 2, 6 ], [ 3, 7 ], [ 4, 8 ] ]
+gap> D := GeneralisedPetersenGraph(IsMutableDigraph, 9, 2);
+<mutable digraph with 18 vertices, 54 edges>
+gap> M := DigraphMaximumMatching(D);;
+gap> IsMaximalMatching(D, M);
+true
+gap> Length(M);
+9
 ]]></Example>
   </Description>
 </ManSection>

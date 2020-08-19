@@ -32,12 +32,12 @@ DeclareOperation("BlissCanonicalLabelling", [IsDigraph, IsHomogeneousList]);
 DeclareAttribute("NautyCanonicalLabelling", IsDigraph);
 DeclareOperation("NautyCanonicalLabelling", [IsDigraph, IsHomogeneousList]);
 
-DeclareAttributeReturnsDigraph("BlissCanonicalDigraph", IsDigraph);
+DeclareAttributeThatReturnsDigraph("BlissCanonicalDigraph", IsDigraph);
 DeclareOperation("BlissCanonicalDigraph", [IsDigraph, IsHomogeneousList]);
 
 #  TODO document 2-arg BlissCanonicalDigraph and NautyCanonicalDigraph
 
-DeclareAttributeReturnsDigraph("NautyCanonicalDigraph", IsDigraph);
+DeclareAttributeThatReturnsDigraph("NautyCanonicalDigraph", IsDigraph);
 DeclareOperation("NautyCanonicalDigraph", [IsDigraph, IsHomogeneousList]);
 
 DeclareOperation("IsIsomorphicDigraph", [IsDigraph, IsDigraph]);
@@ -57,7 +57,14 @@ DeclareGlobalFunction("DIGRAPHS_ValidateEdgeColouring");
 DeclareGlobalFunction("DIGRAPHS_CollapseMultiColouredEdges");
 
 DeclareOperation("IsDigraphAutomorphism", [IsDigraph, IsPerm]);
-DeclareOperation("IsDigraphIsomorphism", [IsDigraph, IsDigraph, IsPerm]);
+DeclareOperation("IsDigraphAutomorphism", [IsDigraph, IsPerm, IsList]);
 DeclareOperation("IsDigraphAutomorphism", [IsDigraph, IsTransformation]);
+DeclareOperation("IsDigraphAutomorphism", [IsDigraph, IsTransformation, IsList]);
+
+DeclareOperation("IsDigraphIsomorphism", [IsDigraph, IsDigraph, IsPerm]);
+DeclareOperation("IsDigraphIsomorphism",
+                 [IsDigraph, IsDigraph, IsPerm, IsList, IsList]);
 DeclareOperation("IsDigraphIsomorphism",
                  [IsDigraph, IsDigraph, IsTransformation]);
+DeclareOperation("IsDigraphIsomorphism",
+                 [IsDigraph, IsDigraph, IsTransformation, IsList, IsList]);

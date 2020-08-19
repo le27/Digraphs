@@ -14,6 +14,7 @@ DeclareAttribute("DigraphVertices", IsDigraph);
 DeclareAttribute("DigraphNrVertices", IsDigraph);
 DeclareAttribute("DigraphEdges", IsDigraph);
 DeclareAttribute("DigraphNrEdges", IsDigraph);
+DeclareAttribute("DigraphNrLoops", IsDigraph);
 
 DeclareAttribute("DigraphRange", IsDigraph);
 DeclareAttribute("DigraphSource", IsDigraph);
@@ -73,15 +74,14 @@ DeclareAttribute("DIGRAPHS_ConnectivityData", IsDigraph, "mutable");
 
 # Things that are attributes for immutable digraphs, but operations for mutable.
 
-DeclareOperation("DigraphReverse", [IsDigraph]);
-DeclareAttribute("DigraphReverseAttr", IsDigraph);
-DeclareOperation("DigraphDual", [IsDigraph]);
-DeclareAttribute("DigraphDualAttr", IsDigraph);
-DeclareOperation("ReducedDigraph", [IsDigraph]);
-DeclareAttribute("ReducedDigraphAttr", IsDigraph);
+DeclareAttributeThatReturnsDigraph("DigraphReverse", IsDigraph);
+DeclareAttributeThatReturnsDigraph("DigraphDual", IsDigraph);
+DeclareAttributeThatReturnsDigraph("ReducedDigraph", IsDigraph);
+DeclareAttributeThatReturnsDigraph("DigraphRemoveAllMultipleEdges", IsDigraph);
 
-DeclareOperation("DigraphRemoveAllMultipleEdges", [IsDigraph]);
-DeclareAttribute("DigraphRemoveAllMultipleEdgesAttr", IsDigraph);
+# TODO replace all DeclareOperations below to DeclareAttributeThatReturnsDigraph,
+# and remove the *Attr versions.
+
 DeclareOperation("DigraphAddAllLoops", [IsDigraph]);
 DeclareAttribute("DigraphAddAllLoopsAttr", IsDigraph);
 DeclareOperation("DigraphRemoveLoops", [IsDigraph]);
@@ -112,3 +112,12 @@ DeclareAttribute("UndirectedSpanningTreeAttr", IsDigraph);
 
 DeclareOperation("DigraphMycielskian", [IsDigraph]);
 DeclareAttribute("DigraphMycielskianAttr", IsDigraph);
+
+DeclareAttribute("DigraphCartesianProductProjections", IsDigraph);
+DeclareAttribute("DigraphDirectProductProjections", IsDigraph);
+
+DeclareAttribute("DigraphMaximalMatching", IsDigraph);
+DeclareAttribute("DigraphMaximumMatching", IsDigraph);
+
+DeclareAttribute("Bridges", IsDigraph);
+DeclareAttributeThatReturnsDigraph("StrongOrientation", IsDigraph);

@@ -9,20 +9,27 @@
 ##
 
 ##  <#GAPDoc Label="PKGVERSIONDATA">
-##  <!ENTITY VERSION        "1.0.0">
-##  <!ENTITY GAPVERS        "4.9.0">
-##  <!ENTITY GRAPEVERS      "4.8.1">
-##  <!ENTITY IOVERS         "4.5.1">
-##  <!ENTITY ORBVERS        "4.8.2">
-##  <!ENTITY ARCHIVENAME    "digraphs-1.0.0">
-##  <!ENTITY COPYRIGHTYEARS "2014-19">
+##  <!ENTITY VERSION                  "1.3.0">
+##  <!ENTITY GAPVERS                  "4.9.0">
+##  <!ENTITY GRAPEVERS                "4.8.1">
+##  <!ENTITY IOVERS                   "4.5.1">
+##  <!ENTITY ORBVERS                  "4.8.2">
+##  <!ENTITY DATASTRUCTURESVERS       "0.2.5">
+##  <!ENTITY NAUTYTRACESINTERFACEVERS "0.2">
+##  <!ENTITY ARCHIVENAME    "digraphs-1.3.0">
+##  <!ENTITY COPYRIGHTYEARS "2014-20">
 ##  <#/GAPDoc>
+
+_STANDREWSMATHS := Concatenation(["Mathematical Institute, North Haugh, ",
+                                  "St Andrews, Fife, KY16 9SS, Scotland"]);
+_STANDREWSCS := Concatenation(["Jack Cole Building, North Haugh, ",
+                               "St Andrews, Fife, KY16 9SX, Scotland"]);
 
 SetPackageInfo(rec(
 PackageName := "Digraphs",
 Subtitle := "Graphs, digraphs, and multidigraphs in GAP",
-Version := "1.0.0",
-Date := "31/12/2019",  # dd/mm/yyyy format
+Version := "1.3.0",
+Date := "27/06/2020",  # dd/mm/yyyy format
 License := "GPL-3.0-or-later",
 ArchiveFormats := ".tar.gz",
 
@@ -57,9 +64,18 @@ Persons := [
     IsMaintainer  := false,
     Email         := "sb235@st-andrews.ac.uk",
     PostalAddress := Concatenation([
-                       "CREEM,", " The Observatory,",
-                       " Buchanan Gardens,", " St Andrews,", " Fife,",
-                       " KY16 9LZ,", " Scotland"]),
+                       "CREEM, The Observatory, Buchanan Gardens, ",
+                       "St Andrews, Fife, KY16 9LZ, Scotland"]),
+    Place         := "St Andrews",
+    Institution   := "University of St Andrews"),
+
+  rec(
+    LastName      := "Cirpons",
+    FirstNames    := "Reinis",
+    IsAuthor      := false,
+    IsMaintainer  := false,
+    Email         := "rc234@st-andrews.ac.uk",
+    PostalAddress := _STANDREWSMATHS,
     Place         := "St Andrews",
     Institution   := "University of St Andrews"),
 
@@ -69,10 +85,7 @@ Persons := [
     IsAuthor      := false,
     IsMaintainer  := false,
     Email         := "le27@st-andrews.ac.uk",
-    PostalAddress := Concatenation([
-                       "Mathematical Institute,",
-                       " North Haugh,", " St Andrews,", " Fife,", " KY16 9SS,",
-                       " Scotland"]),
+    PostalAddress := _STANDREWSMATHS,
     Place         := "St Andrews",
     Institution   := "University of St Andrews"),
 
@@ -81,16 +94,14 @@ Persons := [
     FirstNames    := "Max",
     IsAuthor      := false,
     IsMaintainer  := false,
-    Email         := "max.horn@uni-siegen.de",
+    Email         := "horn@mathematik.uni-kl.de",
     WWWHome       := "https://www.quendi.de/math",
-    PostalAddress := Concatenation([
-                       "Department Mathematik,",
-                       " Universität Siegen,",
-                       " Walter-Flex-Straße 3,",
-                       " 57072 Siegen,",
-                       " Germany"]),
-    Place         := "Siegen",
-    Institution   := "Universität Siegen"),
+    PostalAddress := Concatenation(
+                       "Fachbereich Mathematik, TU Kaiserslautern, ",
+                       "Gottlieb-Daimler-Straße 48, 67663 Kaiserslautern, ",
+                       "Germany"),
+    Place         := "Kaiserslautern, Germany",
+    Institution   := "TU Kaiserslautern"),
 
   rec(
     LastName      := "Jefferson",
@@ -99,10 +110,7 @@ Persons := [
     IsMaintainer  := false,
     Email         := "caj21@st-andrews.ac.uk",
     WWWHome       := "http://caj.host.cs.st-andrews.ac.uk",
-    PostalAddress := Concatenation([
-                       "Jack Cole Building,",
-                       " North Haugh,", " St Andrews,", " Fife,", " KY16 9SX,",
-                       " Scotland"]),
+    PostalAddress := _STANDREWSCS,
     Place         := "St Andrews",
     Institution   := "University of St Andrews"),
 
@@ -112,11 +120,10 @@ Persons := [
     IsAuthor      := true,
     IsMaintainer  := false,
     Email         := "julius.jonusas@tuwien.ac.at",
-    WWWHome       := "http://julius.jonusas.work/",
+    WWWHome       := "http://julius.jonusas.work",
     PostalAddress := Concatenation([
-                       "Institut für Diskrete Mathematik und Geometrie,",
-                       " Wiedner Hauptstrasse 8-10,",
-                       " 1040 Wien, Austria,"]),
+                       "Institut für Diskrete Mathematik und Geometrie, ",
+                       "Wiedner Hauptstrasse 8-10, 1040 Wien, Austria"]),
     Place         := "Wien, Austria",
     Institution   := "TU Wien"),
 
@@ -125,12 +132,9 @@ Persons := [
     FirstNames    := "James",
     IsAuthor      := true,
     IsMaintainer  := true,
-    Email         := "jdm3@st-andrews.ac.uk",
-    WWWHome       := "http://goo.gl/ZtViV6",
-    PostalAddress := Concatenation([
-                       "Mathematical Institute,",
-                       " North Haugh,", " St Andrews,", " Fife,", " KY16 9SS,",
-                       " Scotland"]),
+    Email         := "jdm3@st-and.ac.uk",
+    WWWHome       := "https://jdbm.me",
+    PostalAddress := _STANDREWSMATHS,
     Place         := "St Andrews",
     Institution   := "University of St Andrews"),
 
@@ -140,11 +144,8 @@ Persons := [
     IsAuthor      := false,
     IsMaintainer  := false,
     Email         := "markus.pfeiffer@morphism.de",
-    WWWHome       := "https://www.morphism.de/~markusp/",
-    PostalAddress := Concatenation([
-                       "School of Computer Science,",
-                       " North Haugh,", " St Andrews,", " Fife,", " KY16 9SX,",
-                       " Scotland"]),
+    WWWHome       := "https://www.morphism.de/~markusp",
+    PostalAddress := _STANDREWSCS,
     Place         := "St Andrews",
     Institution   := "University of St Andrews"),
 
@@ -154,10 +155,7 @@ Persons := [
     IsAuthor      := false,
     IsMaintainer  := false,
     Email         := "cr66@st-andrews.ac.uk",
-    PostalAddress := Concatenation([
-                       "Mathematical Institute,",
-                       " North Haugh,", " St Andrews,", " Fife,", " KY16 9SS,",
-                       " Scotland"]),
+    PostalAddress := _STANDREWSMATHS,
     Place         := "St Andrews",
     Institution   := "University of St Andrews"),
 
@@ -167,10 +165,7 @@ Persons := [
     IsAuthor      := false,
     IsMaintainer  := false,
     Email         := "fls3@st-andrews.ac.uk",
-    PostalAddress := Concatenation([
-                       "Mathematical Institute,",
-                       " North Haugh,", " St Andrews,", " Fife,", " KY16 9SS,",
-                       " Scotland"]),
+    PostalAddress := _STANDREWSMATHS,
     Place         := "St Andrews",
     Institution   := "University of St Andrews"),
 
@@ -180,11 +175,19 @@ Persons := [
     IsAuthor      := true,
     IsMaintainer  := false,
     Email         := "mct25@st-andrews.ac.uk",
-    WWWHome       := "http://www-groups.mcs.st-andrews.ac.uk/~mct25/",
-    PostalAddress := Concatenation([
-                       "Mathematical Institute,",
-                       " North Haugh,", " St Andrews,", " Fife,", " KY16 9SS,",
-                       " Scotland"]),
+    WWWHome       := "https://mtorpey.github.io",
+    PostalAddress := _STANDREWSCS,
+    Place         := "St Andrews",
+    Institution   := "University of St Andrews"),
+
+  rec(
+    LastName      := "Tsalakou",
+    FirstNames    := "Maria",
+    IsAuthor      := true,
+    IsMaintainer  := false,
+    Email         := "mt200@st-andrews.ac.uk",
+    WWWHome       := "https://mariatsalakou.github.io/",
+    PostalAddress := _STANDREWSMATHS,
     Place         := "St Andrews",
     Institution   := "University of St Andrews"),
 
@@ -194,10 +197,7 @@ Persons := [
     IsAuthor      := false,
     IsMaintainer  := false,
     Email         := "mw231@st-andrews.ac.uk",
-    PostalAddress := Concatenation([
-                       "Mathematical Institute,",
-                       " North Haugh,", " St Andrews,", " Fife,", " KY16 9SS,",
-                       " Scotland"]),
+    PostalAddress := _STANDREWSMATHS,
     Place         := "St Andrews",
     Institution   := "University of St Andrews"),
 
@@ -209,8 +209,7 @@ Persons := [
     Email         := "gap@wilf-wilson.net",
     WWWHome       := "http://wilf.me",
     PostalAddress := Concatenation(["Theodor-Lieser-Straße 5, ",
-                                    "06120 Halle (Saale), ",
-                                    "Germany"]),
+                                    "06120 Halle (Saale), Germany"]),
     Place         := "Halle (Saale), Germany",
     Institution   := "University of Halle-Wittenberg")],
 
@@ -241,7 +240,8 @@ PackageDoc := rec(
 Dependencies := rec(
   GAP := ">=4.9.0",
   NeededOtherPackages := [["io", ">=4.5.1"],
-                          ["orb", ">=4.8.2"]],
+                          ["orb", ">=4.8.2"],
+                          ["datastructures", ">=0.2.5"]],
   SuggestedOtherPackages := [["gapdoc", ">=1.5.1"],
                              ["grape", ">=4.8.1"],
                              ["nautytracesinterface", ">=0.2"]],

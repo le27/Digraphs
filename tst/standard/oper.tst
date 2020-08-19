@@ -630,6 +630,18 @@ false
 gap> gr2 = gr3;
 true
 
+#  DigraphAddVertices (redundant three-argument version)
+gap> D := Digraph([[1]]);
+<immutable digraph with 1 vertex, 1 edge>
+gap> DigraphVertexLabels(D);
+[ 1 ]
+gap> DigraphAddVertices(D, 2, [fail]);
+Error, the list <labels> (3rd argument) must have length <m> (2nd argument),
+gap> D := DigraphAddVertices(D, 2, [fail, true]);
+<immutable digraph with 3 vertices, 1 edge>
+gap> DigraphVertexLabels(D);
+[ 1, fail, true ]
+
 #  DigraphAddVertex
 gap> gr := CompleteDigraph(1);
 <immutable empty digraph with 1 vertex>
@@ -864,14 +876,14 @@ gap> gr2 := CompleteDigraph(100);
 gap> DigraphDisjointUnion(gr) = gr;
 true
 gap> DigraphDisjointUnion([[]]);
-Error, the arguments must be digraphs by out-neighbours, or a single list of d\
-igraphs by out-neighbours,
+Error, the arguments must be digraphs by out-neighbours, or a single non-empty\
+ list of digraphs by out-neighbours,
 gap> DigraphDisjointUnion([gr], [gr]);
-Error, the arguments must be digraphs by out-neighbours, or a single list of d\
-igraphs by out-neighbours,
+Error, the arguments must be digraphs by out-neighbours, or a single non-empty\
+ list of digraphs by out-neighbours,
 gap> DigraphDisjointUnion(gr, Group(()));
-Error, the arguments must be digraphs by out-neighbours, or a single list of d\
-igraphs by out-neighbours,
+Error, the arguments must be digraphs by out-neighbours, or a single non-empty\
+ list of digraphs by out-neighbours,
 gap> DigraphDisjointUnion(gr, gr);
 <immutable digraph with 2000 vertices, 2000 edges>
 gap> DigraphDisjointUnion([gr2, gr2]);
@@ -1396,8 +1408,11 @@ gap> DigraphShortestDistance(gr, [1, 6], DigraphLayers(gr, 1)[3]);
 gap> gr := DigraphFromSparse6String(
 > ":]n?AL`CB_EDbFE`IGaGHdJIeKGcLK_@MhDCiFLaBJmHFmKJ");
 <immutable digraph with 30 vertices, 90 edges>
-gap> DigraphGroup(gr);
-<permutation group with 5 generators>
+gap> G1 := DigraphGroup(gr);;
+gap> IsPermGroup(G1) and Length(GeneratorsOfGroup(G1)) = 5;
+true
+gap> Size(G1);
+1440
 gap> DigraphShortestDistance(gr, 1, 16);
 1
 
@@ -1724,6 +1739,16 @@ gap> edges := [[1, 1], [2, 3]];
 gap> IsMaximalMatching(gr, edges);
 true
 
+# IsMaximumMatching
+gap> D := Digraph([[1, 2], [1, 2], [2, 3, 4], [3, 5], [1]]);
+<immutable digraph with 5 vertices, 10 edges>
+gap> IsMaximumMatching(D, [[1, 2], [3, 3], [4, 5]]);
+false
+gap> IsMaximumMatching(D, [[1, 1], [2, 2], [3, 3], [4, 5]]);
+true
+gap> IsMaximumMatching(D, [[1, 1], [1, 2], [2, 2], [3, 3], [4, 5]]);
+false
+
 # DigraphShortestPath
 gap> gr := Digraph([[1], [3, 4], [5, 6], [4, 2, 3], [4, 5], [1]]);;
 gap> DigraphShortestPath(gr, 1, 6);
@@ -1904,6 +1929,66 @@ Error, the 3rd argument <j> must be a vertex of the 1st argument <D>,
 gap> PartialOrderDigraphJoinOfVertices(D, 2, 1);
 Error, the 2nd argument <i> must be a vertex of the 1st argument <D>,
 
+# DigraphCartesianProduct
+gap> D := DigraphMutableCopy(CycleDigraph(3));
+<mutable digraph with 3 vertices, 3 edges>
+gap> DigraphCartesianProduct(D, D, D);
+<mutable digraph with 27 vertices, 81 edges>
+gap> D := DigraphMutableCopy(CycleDigraph(3));
+<mutable digraph with 3 vertices, 3 edges>
+gap> DigraphCartesianProduct(D, CycleDigraph(3), CycleDigraph(3), CycleDigraph(3));
+<mutable digraph with 81 vertices, 324 edges>
+gap> D := DigraphCartesianProduct(ChainDigraph(3), CycleDigraph(3));
+<immutable digraph with 9 vertices, 15 edges>
+gap> IsIsomorphicDigraph(D,
+> Digraph([[2, 4], [3, 5], [6], [5, 7], [6, 8], [9], [8, 1], [9, 2], [3]]));
+true
+gap> D := DigraphCartesianProduct(ChainDigraph(3), CycleDigraph(3),
+> Digraph([[2], [2]]));
+<immutable digraph with 18 vertices, 48 edges>
+gap> HasDigraphCartesianProductProjections(D);
+true
+gap> Length(DigraphCartesianProductProjections(D));
+3
+gap> G := DigraphFromDigraph6String(
+> "&QSC?IA?@@?A__@OO?GG_OCOGAG?@?E_?BO?@G??s??Y??H?CE?AB?@@");;
+gap> IsIsomorphicDigraph(D, G);
+true
+gap> D := RandomDigraph(100);; IsIsomorphicDigraph(D, 
+> DigraphCartesianProduct(D, Digraph([[]])));
+true
+gap> DigraphCartesianProduct(Digraph([[1]]), Digraph([[1]]));
+<immutable multidigraph with 1 vertex, 2 edges>
+
+# DigraphDirectProduct
+gap> D := DigraphMutableCopy(CycleDigraph(3));
+<mutable digraph with 3 vertices, 3 edges>
+gap> DigraphDirectProduct(D, D, D);
+<mutable digraph with 27 vertices, 27 edges>
+gap> D := DigraphMutableCopy(CycleDigraph(3));
+<mutable digraph with 3 vertices, 3 edges>
+gap> DigraphDirectProduct(D, CycleDigraph(3), CycleDigraph(3), CycleDigraph(3));
+<mutable digraph with 81 vertices, 81 edges>
+gap> D := DigraphDirectProduct(ChainDigraph(3), CycleDigraph(3));
+<immutable digraph with 9 vertices, 6 edges>
+gap> IsIsomorphicDigraph(D,
+> Digraph([[5], [6], [], [8], [9], [], [2], [3], []]));
+true
+gap> D := DigraphDirectProduct(ChainDigraph(3), CycleDigraph(3),
+> Digraph([[2], [2]]));
+<immutable digraph with 18 vertices, 12 edges>
+gap> HasDigraphDirectProductProjections(D);
+true
+gap> Length(DigraphDirectProductProjections(D));
+3
+gap> G := DigraphFromDigraph6String(
+> "&Q??O??G?????A??@????A??@??????O??G?????A??@????A??@????");;
+gap> IsIsomorphicDigraph(D, G);
+true
+gap> D := RandomDigraph(100);; IsIsomorphicDigraph(D,
+> DigraphDirectProduct(D, Digraph([[1]])));
+true
+
 # Issue 213
 gap> D := Digraph(IsMutableDigraph, [[3, 4, 6, 8], [1, 3, 4, 6, 7, 8, 10], 
 > [1, 2, 6, 7, 8, 9], [3, 5, 7], [1, 2, 3, 6, 8, 9], [2, 6, 8, 10], 
@@ -1925,7 +2010,48 @@ gap> OutNeighbours(C);
 [ [ 5, 6, 7 ], [ 7 ], [ 7 ], [ 7 ], [ 1, 6, 7 ], [ 1, 5, 7 ], 
   [ 3, 2, 1, 6, 5, 4 ] ]
 
-# DIGRAPHS_UnbindVariables
+#DigraphDijkstra
+# When there is one path to target
+gap> mat := [[0, 1, 1], [0, 0, 1], [0, 0, 0]];
+[ [ 0, 1, 1 ], [ 0, 0, 1 ], [ 0, 0, 0 ] ]
+gap> gr := DigraphByAdjacencyMatrix(mat);
+<immutable digraph with 3 vertices, 3 edges>
+gap> DigraphShortestDistance(gr, 2, 3);
+1
+gap> DigraphDijkstra(gr, 2, 3);
+[ [ infinity, 0, 1 ], [ -1, -1, 2 ] ]
+gap> DigraphDijkstra(gr, 1, 3);
+[ [ 0, 1, 1 ], [ -1, 1, 1 ] ]
+gap> DigraphDijkstra(gr, 1, 2);
+[ [ 0, 1, 1 ], [ -1, 1, 1 ] ]
+gap> DigraphShortestDistance(gr, 1, 3);
+1
+gap> DigraphShortestDistance(gr, 1, 2);
+1
+gap> mat := [[0, 1, 1], [0, 0, 0], [0, 0, 0]];
+[ [ 0, 1, 1 ], [ 0, 0, 0 ], [ 0, 0, 0 ] ]
+gap> gr := DigraphByAdjacencyMatrix(mat);
+<immutable digraph with 3 vertices, 2 edges>
+gap> DigraphShortestDistance(gr, 2, 3);
+fail
+gap> DigraphDijkstra(gr, 2, 3);
+[ [ infinity, 0, infinity ], [ -1, -1, -1 ] ]
+gap> mat := [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 0, 0], [1, 0, 0, 0]];
+[ [ 0, 1, 1, 1 ], [ 0, 0, 1, 1 ], [ 0, 1, 0, 0 ], [ 1, 0, 0, 0 ] ]
+gap> gr := DigraphByAdjacencyMatrix(mat);
+<immutable digraph with 4 vertices, 7 edges>
+gap> DigraphDijkstra(gr, 1, 4);
+[ [ 0, 1, 1, 1 ], [ -1, 1, 1, 1 ] ]
+gap> mat := [[0, 1, 1, 1], [0, 0, 1, 1], [0, 1, 0, 0], [1, 0, 0, 0]];
+[ [ 0, 1, 1, 1 ], [ 0, 0, 1, 1 ], [ 0, 1, 0, 0 ], [ 1, 0, 0, 0 ] ]
+gap> gr := DigraphByAdjacencyMatrix(mat);
+<immutable digraph with 4 vertices, 7 edges>
+gap> DigraphDijkstra(gr, 1, 2);
+[ [ 0, 1, 1, 1 ], [ -1, 1, 1, 1 ] ]
+gap> DigraphDijkstra(gr, 1, 3);
+[ [ 0, 1, 1, 1 ], [ -1, 1, 1, 1 ] ]
+
+#DIGRAPHS_UnbindVariables
 gap> Unbind(a);
 gap> Unbind(adj);
 gap> Unbind(b);
